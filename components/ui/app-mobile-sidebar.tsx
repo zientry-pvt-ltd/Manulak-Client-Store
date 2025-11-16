@@ -36,7 +36,7 @@ export function MobileSidebar() {
               {/* Search */}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <Link href="/search">
+                  <Link href="/cart">
                     <Search className="h-4 w-4" />
                     <span>Search Products</span>
                   </Link>
@@ -66,7 +66,7 @@ export function MobileSidebar() {
               {/* Order Status */}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <Link href="/order-status">
+                  <Link href="/products">
                     <Package className="h-4 w-4" />
                     <span>Order Status</span>
                   </Link>

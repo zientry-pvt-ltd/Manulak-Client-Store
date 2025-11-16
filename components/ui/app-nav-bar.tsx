@@ -1,15 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Heart, ShoppingCart, Search, Package } from "lucide-react";
 import Image from "next/image";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import Link from "next/link";
 
 export const AppNavBar = () => {
   return (
-    <nav className="w-full h-16 px-4 md:px-8 lg:px-36 flex items-center justify-between">
+    <nav className="w-full h-16 px-4 md:px-8 lg:px-36 flex items-center justify-between bg-white border-b">
       {/* LEFT — MOBILE TRIGGER + LOGO */}
       <div className="flex items-center gap-3">
         {/* Mobile Sidebar Trigger */}
@@ -53,7 +53,7 @@ export const AppNavBar = () => {
         </Button>
 
         {/* Order Status */}
-        <Link href="/order-status">
+        <Link href="/wishlist">
           <Button
             className="hidden md:inline-flex text-xs gap-1"
             variant={"outline"}
