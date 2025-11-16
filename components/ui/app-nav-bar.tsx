@@ -23,6 +23,7 @@ export const AppNavBar = () => {
             width={100}
             height={100}
             className="w-auto h-10 object-contain"
+            loading="eager"
           />
         </Link>
       </div>
