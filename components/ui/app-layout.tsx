@@ -3,6 +3,7 @@
 import { SidebarProvider, Sidebar } from "@/components/ui/sidebar";
 import { AppNavBar } from "@/components/ui/app-nav-bar";
 import { MobileSidebar } from "@/components/ui/app-mobile-sidebar";
+import Image from "next/image";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -19,7 +20,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </header>
 
           {/* Content */}
-          <main className="pt-16 p-4">{children}</main>
+          <main className="pt-16">
+            <Image
+              src={"/assets/top.png"}
+              width={1600}
+              height={100}
+              alt="Top Image"
+              className="max-h-16 min-h-10 object-cover"
+              loading="eager"
+            />
+            {children}
+          </main>
         </div>
       </div>
     </SidebarProvider>
