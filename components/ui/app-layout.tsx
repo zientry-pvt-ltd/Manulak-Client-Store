@@ -8,10 +8,10 @@ import Image from "next/image";
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider defaultOpen={false}>
-      <div className="min-h-screen flex">
+      <div className="min-h-screen flex w-full">
         <Sidebar />
 
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col  w-full">
           {/* Fixed Navbar */}
           <MobileSidebar />
 
@@ -26,7 +26,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               width={1600}
               height={100}
               alt="Top Image"
-              className="max-h-16 min-h-10 object-cover"
+              className="max-h-16 min-h-10 object-cover w-full"
               loading="eager"
             />
             {children}
