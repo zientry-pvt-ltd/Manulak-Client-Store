@@ -43,26 +43,29 @@ export const AppNavBar = () => {
       {/* RIGHT — ICONS & ORDER STATUS */}
       <div className="flex items-center gap-3">
         {/* Favorite */}
-        <Button variant="outline" size="icon">
-          <Heart className="h-5 w-5" />
-        </Button>
-
-        {/* Cart */}
-        <Button variant="outline" size="icon">
-          <ShoppingCart className="h-5 w-5" />
-        </Button>
-
-        {/* Order Status */}
         <Link href="/wishlist">
-          <Button
-            className="hidden md:inline-flex text-xs gap-1"
-            variant={"outline"}
-            size={"sm"}
-          >
-            <Package className="h-4 w-4" />
-            Order Status
+          <Button variant="outline" size="icon">
+            <Heart className="h-5 w-5" />
           </Button>
         </Link>
+
+        {/* Cart */}
+        <Link href="/cart">
+          <Button variant="outline" size="icon">
+            <ShoppingCart className="h-5 w-5" />
+          </Button>
+        </Link>
+
+        {/* Order Status */}
+        <Button
+          className="hidden md:inline-flex text-xs gap-1"
+          variant={"outline"}
+          size={"sm"}
+          disabled
+        >
+          <Package className="h-4 w-4" />
+          Order Status
+        </Button>
       </div>
     </nav>
   );
