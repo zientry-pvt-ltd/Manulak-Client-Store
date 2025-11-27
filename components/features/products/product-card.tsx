@@ -30,18 +30,20 @@ export function ProductCard({ product }: ProductCardProps) {
   const wishlistItems = useAppSelector((state) => state.wishlist.items);
   const isInWishlist = wishlistItems.some((item) => item.id === product.id);
 
-  // Get all images (main image + additional images, max 5)
-  const allImages = [product.image, ...(product.images || [])].slice(0, 5);
+  const allImages = [
+    product.product_image_urls[0],
+    ...(product.product_image_urls.slice(1) || []),
+  ].slice(0, 5);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
     dispatch(
       addToCart({
         id: product.id,
-        name: product.name,
-        price: product.price,
+        name: product.product_name,
+        price: product.selling_price,
         quantity: 1,
-        image: product.image,
+        image: product.product_image_urls[0],
       })
     );
   };
@@ -53,7 +55,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const handleViewDetails = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowDialog(true);
-    setSelectedImageIndex(0); // Reset to first image when opening dialog
+    setSelectedImageIndex(0);
   };
 
   return (
@@ -70,16 +72,16 @@ export function ProductCard({ product }: ProductCardProps) {
         {/* Image Container */}
         <div className="relative h-64 overflow-hidden bg-gray-100">
           <Image
-            src={product.image}
-            alt={product.name}
+            src={product.product_image_urls[0]}
+            alt={product.product_name}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-110"
           />
 
           {/* Stock Badge */}
-          {product.stock < 10 && (
+          {product.quantity < 10 && (
             <Badge variant="destructive" className="absolute top-3 left-3 z-10">
-              Only {product.stock} left
+              Only {product.quantity} left
             </Badge>
           )}
 
@@ -122,35 +124,33 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Product Info */}
         <div className="p-4">
-          <h3 className="font-semibold text-lg mb-2 line-clamp-2 min-h-14">
-            {product.name}
+          <h3 className="font-semibold text-lg line-clamp-2 min-h-10">
+            {product.product_name}
           </h3>
 
-          {/* Rating */}
-          {product.rating && (
-            <div className="flex items-center gap-1 mb-2">
-              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-sm font-medium">{product.rating}</span>
-              <span className="text-sm text-gray-500">(125)</span>
-            </div>
+          {/* description */}
+          {product.product_desc && (
+            <span className="text-sm font-medium">{product.product_desc}</span>
           )}
 
           {/* Price */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mt-2 mb-4">
             <p className="text-2xl font-bold text-primary">
-              ${product.price.toFixed(2)}
+              Rs:{product.selling_price.toFixed(2)}
             </p>
-            <span className="text-sm text-gray-500">{product.category}</span>
+            <span className="text-sm text-gray-500">
+              {product.product_category}
+            </span>
           </div>
 
           {/* Add to Cart Button */}
           <Button
             onClick={handleAddToCart}
             className="w-full"
-            disabled={product.stock === 0}
+            disabled={product.quantity === 0}
           >
             <ShoppingCart className="h-4 w-4 mr-2" />
-            {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
+            {product.quantity === 0 ? "Out of Stock" : "Add to Cart"}
           </Button>
         </div>
       </div>
@@ -158,17 +158,19 @@ export function ProductCard({ product }: ProductCardProps) {
       {/* Product Details Dialog with Image Gallery */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="lg:max-w-4xl md:max-w-3xl max-h-[90vh] p-0">
-          <DialogHeader className="px-4 pt-3">
-            <DialogTitle className="text-2xl">{product.name}</DialogTitle>
-            <DialogDescription>{product.category}</DialogDescription>
+          <DialogHeader className="px-4 pt-3 gap-0">
+            <DialogTitle className="text-2xl">
+              {product.product_name}
+            </DialogTitle>
+            <DialogDescription>{product.product_category}</DialogDescription>
           </DialogHeader>
 
           <div className="overflow-y-auto max-h-[75vh] px-4 pb-6 pt-1 grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="flex gap-2 flex-row">
               {/* Thumbnail Column - Vertical on the right */}
-              {allImages.length > 1 && (
-                <div className="flex flex-col justify-between">
-                  {allImages.map((img, index) => (
+              {product.product_image_urls.length > 1 && (
+                <div className="flex flex-col justify-start gap-2 order-2 lg:order-1">
+                  {product.product_image_urls.map((img, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImageIndex(index)}
@@ -181,7 +183,7 @@ export function ProductCard({ product }: ProductCardProps) {
                     >
                       <Image
                         src={img}
-                        alt={`${product.name} view ${index + 1}`}
+                        alt={`${product.product_name} view ${index + 1}`}
                         fill
                         className="object-cover"
                       />
@@ -193,8 +195,8 @@ export function ProductCard({ product }: ProductCardProps) {
               {/* Main Image */}
               <div className="relative flex-1 h-96 rounded-lg overflow-hidden bg-gray-100 order-1">
                 <Image
-                  src={allImages[selectedImageIndex]}
-                  alt={product.name}
+                  src={product.product_image_urls[selectedImageIndex]}
+                  alt={product.product_name}
                   fill
                   className="object-cover transition-opacity duration-300"
                   priority
@@ -209,22 +211,22 @@ export function ProductCard({ product }: ProductCardProps) {
             </div>
             {/* Details Section */}
             <div className="space-y-4 flex flex-col">
-              <p className="text-3xl font-bold text-primary">
-                ${product.price.toFixed(2)}
+              <p className="text-2xl font-bold text-primary">
+                Rs:{product.selling_price.toFixed(2)}
               </p>
 
               <div>
                 <h4 className="font-semibold mb-2">Description</h4>
-                <p className="text-gray-600">{product.description}</p>
+                <p className="text-gray-600">{product.product_desc}</p>
               </div>
 
               <div>
                 <h4 className="font-semibold mb-2">Availability</h4>
                 <p className="text-gray-600">
-                  {product.stock > 0 ? (
+                  {product.quantity > 0 ? (
                     <span className="text-green-600 flex items-center gap-1">
                       <span className="inline-block w-2 h-2 bg-green-600 rounded-full"></span>
-                      In Stock ({product.stock} available)
+                      In Stock ({product.quantity} available)
                     </span>
                   ) : (
                     <span className="text-red-600 flex items-center gap-1">
@@ -239,7 +241,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 <Button
                   onClick={handleAddToCart}
                   className="flex-1"
-                  disabled={product.stock === 0}
+                  disabled={product.quantity === 0}
                 >
                   <ShoppingCart className="h-4 w-4 mr-2" />
                   Add to Cart
