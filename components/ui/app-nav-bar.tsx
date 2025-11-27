@@ -57,15 +57,12 @@ export const AppNavBar = () => {
         </Link>
 
         {/* Order Status */}
-        <Button
-          className="hidden md:inline-flex text-xs gap-1"
-          variant={"outline"}
-          size={"sm"}
-          disabled
-        >
-          <Package className="h-4 w-4" />
-          Order Status
-        </Button>
+        <Link href="/order-status">
+          <Button variant={"outline"} size={"sm"}>
+            <Package className="h-4 w-4" />
+            Order Status
+          </Button>
+        </Link>
       </div>
     </nav>
   );

@@ -5,146 +5,33 @@ import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Filter } from "lucide-react";
-import { Product } from "@/types/product";
-// Mock data - Replace with actual API call
-const MOCK_PRODUCTS: Product[] = [
-  {
-    id: "1",
-    name: "Wireless Bluetooth Headphones",
-    description:
-      "Premium noise-cancelling headphones with 30-hour battery life and crystal clear sound quality.",
-    price: 129.99,
-    image:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop",
-    images: [
-      "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=500&h=500&fit=crop",
-      "https://images.unsplash.com/photo-1545127398-14699f92334b?w=500&h=500&fit=crop",
-      "https://images.unsplash.com/photo-1524678606370-a47ad25cb82a?w=500&h=500&fit=crop",
-      "https://images.unsplash.com/photo-1487215078519-e21cc028cb29?w=500&h=500&fit=crop",
-    ],
-    category: "Audio",
-    stock: 25,
-    rating: 4.5,
-  },
-  {
-    id: "2",
-    name: "Smart Watch Pro",
-    description:
-      "Advanced fitness tracking, heart rate monitoring, and smartphone notifications on your wrist.",
-    price: 299.99,
-    image:
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop",
-    category: "Wearables",
-    stock: 15,
-    rating: 4.8,
-  },
-  {
-    id: "3",
-    name: "Mechanical Gaming Keyboard",
-    description:
-      "RGB backlit mechanical keyboard with customizable keys and lightning-fast response time.",
-    price: 89.99,
-    image:
-      "https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?w=500&h=500&fit=crop",
-    category: "Electronics",
-    stock: 50,
-    rating: 4.6,
-  },
-  {
-    id: "4",
-    name: "4K Ultra HD Camera",
-    description:
-      "Professional-grade camera with 4K video recording and advanced image stabilization.",
-    price: 899.99,
-    image:
-      "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=500&h=500&fit=crop",
-    category: "Electronics",
-    stock: 8,
-    rating: 4.9,
-  },
-  {
-    id: "5",
-    name: "Portable Speaker",
-    description:
-      "Waterproof Bluetooth speaker with 360-degree sound and 12-hour battery life.",
-    price: 59.99,
-    image:
-      "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&h=500&fit=crop",
-    category: "Audio",
-    stock: 100,
-    rating: 4.3,
-  },
-  {
-    id: "6",
-    name: "Laptop Stand Aluminum",
-    description:
-      "Ergonomic laptop stand with adjustable height and cooling ventilation design.",
-    price: 39.99,
-    image:
-      "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=500&h=500&fit=crop",
-    category: "Accessories",
-    stock: 75,
-    rating: 4.4,
-  },
-  {
-    id: "7",
-    name: "Wireless Mouse",
-    description:
-      "Precision wireless mouse with ergonomic design and long-lasting battery.",
-    price: 24.99,
-    image:
-      "https://images.unsplash.com/photo-1527814050087-3793815479db?w=500&h=500&fit=crop",
-    category: "Electronics",
-    stock: 0,
-    rating: 4.2,
-  },
-  {
-    id: "8",
-    name: "USB-C Hub Adapter",
-    description:
-      "Multi-port USB-C hub with HDMI, USB 3.0, and SD card reader for laptops.",
-    price: 34.99,
-    image:
-      "https://images.unsplash.com/photo-1625948515291-69613efd103f?w=500&h=500&fit=crop",
-    category: "Accessories",
-    stock: 120,
-    rating: 4.7,
-  },
-  {
-    id: "9",
-    name: "Smartphone Gimbal Stabilizer",
-    description:
-      "3-axis gimbal stabilizer for smooth video recording with your smartphone.",
-    price: 149.99,
-    image:
-      "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=500&h=500&fit=crop",
-    category: "Electronics",
-    stock: 30,
-    rating: 4.6,
-  },
-];
+import { useGetProductsQuery } from "@/lib/store/services/products-api";
+import { ProductCardSkeleton } from "@/components/features/products/product-card-skelton";
 
 export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [priceRange, setPriceRange] = useState<string>("All");
 
-  // Extract unique categories
+  const { data: products, isLoading } = useGetProductsQuery();
+
   const categories = useMemo(() => {
-    const cats = Array.from(new Set(MOCK_PRODUCTS.map((p) => p.category)));
+    const cats = Array.from(
+      new Set(products?.data.entities.map((p) => p.product_category) || [])
+    );
     return ["All", ...cats];
-  }, []);
+  }, [products?.data.entities]);
 
-  // Filter products
   const filteredProducts = useMemo(() => {
-    let filtered = MOCK_PRODUCTS;
+    let filtered = products?.data.entities || [];
 
-    // Filter by category
     if (selectedCategory !== "All") {
-      filtered = filtered.filter((p) => p.category === selectedCategory);
+      filtered = filtered.filter(
+        (p) => p.product_category === selectedCategory
+      );
     }
 
     return filtered;
-  }, [selectedCategory]);
+  }, [products?.data.entities, selectedCategory]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -177,9 +64,10 @@ export default function ProductsPage() {
                 {selectedCategory === category && (
                   <Badge className="ml-2 bg-white text-primary hover:bg-white">
                     {category === "All"
-                      ? MOCK_PRODUCTS.length
-                      : MOCK_PRODUCTS.filter((p) => p.category === category)
-                          .length}
+                      ? products?.data.entities.length
+                      : products?.data.entities.filter(
+                          (p) => p.product_category === category
+                        ).length}
                   </Badge>
                 )}
               </Button>
@@ -190,7 +78,8 @@ export default function ProductsPage() {
         {/* Active Filters & Results Count */}
         <div className="flex items-center justify-between pt-4 border-t">
           <p className="text-sm text-gray-600">
-            Showing {filteredProducts.length} of {MOCK_PRODUCTS.length} products
+            Showing {filteredProducts.length} of{" "}
+            {products?.data.entities.length} products
           </p>
           {(selectedCategory !== "All" || priceRange !== "All") && (
             <Button
@@ -209,13 +98,14 @@ export default function ProductsPage() {
 
       {/* Product Grid - 3 Columns */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProducts.map((product) => (
+        <ProductCardSkeleton isLoading={isLoading} />
+        {products?.data.entities.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
 
       {/* Empty State - if no products */}
-      {filteredProducts.length === 0 && (
+      {filteredProducts.length === 0 && !isLoading && (
         <div className="text-center py-12">
           <p className="text-gray-600 text-lg mb-2">No products found</p>
           <p className="text-gray-500 text-sm mb-4">
