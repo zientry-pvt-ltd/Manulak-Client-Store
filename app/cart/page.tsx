@@ -22,77 +22,47 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-// Dummy cart data for demonstration
-const dummyCartItems = [
-  {
-    id: "1",
-    name: "Wireless Bluetooth Headphones with Noise Cancellation",
-    price: 89.99,
-    quantity: 2,
-    image:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop",
-  },
-  {
-    id: "2",
-    name: "Smart Watch Series 5 - Fitness Tracker",
-    price: 249.99,
-    quantity: 1,
-    image:
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop",
-  },
-  {
-    id: "3",
-    name: "Premium Leather Laptop Bag",
-    price: 129.99,
-    quantity: 1,
-    image:
-      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop",
-  },
-  {
-    id: "4",
-    name: "Portable Power Bank 20000mAh",
-    price: 45.99,
-    quantity: 3,
-    image:
-      "https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=400&h=400&fit=crop",
-  },
-];
+import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
+import {
+  clearCart,
+  removeFromCart,
+  updateQuantity,
+} from "@/lib/store/slices/cart-slice";
+import { useRouter } from "next/navigation";
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState(dummyCartItems);
   const [showClearDialog, setShowClearDialog] = useState(false);
+  const { items: storedCartItems, totalAmount } = useAppSelector(
+    (state) => state.cart
+  );
+
+  const dispatch = useAppDispatch();
+  const navigate = useRouter();
 
   const handleRemoveItem = (itemId: string) => {
-    setCartItems(cartItems.filter((item) => item.id !== itemId));
+    dispatch(removeFromCart(itemId));
   };
 
   const handleUpdateQuantity = (itemId: string, newQuantity: number) => {
     if (newQuantity > 0 && newQuantity <= 99) {
-      setCartItems(
-        cartItems.map((item) =>
-          item.id === itemId ? { ...item, quantity: newQuantity } : item
-        )
-      );
+      dispatch(updateQuantity({ id: itemId, quantity: newQuantity }));
     }
   };
 
   const handleClearCart = () => {
-    setCartItems([]);
-    setShowClearDialog(false);
+    dispatch(clearCart());
   };
 
   const handleProceedToCheckout = () => {
-    // Navigate to checkout page
-    window.location.href = "/checkout";
+    navigate.push("/checkout");
   };
 
   const handleReturnToShop = () => {
-    window.location.href = "/products";
+    navigate.push("/products");
   };
 
   // Calculate totals
-  const subtotal = cartItems.reduce(
+  const subtotal = storedCartItems.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
@@ -100,7 +70,7 @@ export default function CartPage() {
   const shipping = subtotal > 100 ? 0 : 10; // Free shipping over $100
   const total = subtotal + tax + shipping;
 
-  if (cartItems.length === 0) {
+  if (storedCartItems.length === 0) {
     return (
       <div className="container mx-auto px-4 py-16">
         <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
@@ -131,8 +101,8 @@ export default function CartPage() {
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <span className="text-gray-600">
-              {cartItems.length} {cartItems.length === 1 ? "item" : "items"} in
-              cart
+              {storedCartItems.length}{" "}
+              {storedCartItems.length === 1 ? "item" : "items"} in cart
             </span>
             <Button
               variant="outline"
@@ -147,7 +117,7 @@ export default function CartPage() {
 
           {/* Cart Items */}
           <div className="space-y-4">
-            {cartItems.map((item) => (
+            {storedCartItems.map((item) => (
               <div
                 key={item.id}
                 className="flex gap-4 p-4 border rounded-lg bg-white transition-shadow"
@@ -251,12 +221,7 @@ export default function CartPage() {
             <div className="space-y-3 mb-6">
               <div className="flex justify-between text-gray-600">
                 <span>Subtotal</span>
-                <span className="font-medium">${subtotal.toFixed(2)}</span>
-              </div>
-
-              <div className="flex justify-between text-gray-600">
-                <span>Tax (10%)</span>
-                <span className="font-medium">${tax.toFixed(2)}</span>
+                <span className="font-medium">Rs:{totalAmount.toFixed(2)}</span>
               </div>
 
               <div className="flex justify-between text-gray-600">
@@ -265,21 +230,21 @@ export default function CartPage() {
                   {shipping === 0 ? (
                     <span className="text-green-600">FREE</span>
                   ) : (
-                    `$${shipping.toFixed(2)}`
+                    `RS:${shipping.toFixed(2)}`
                   )}
                 </span>
               </div>
 
               {subtotal < 100 && (
                 <p className="text-xs text-gray-500 italic">
-                  Add ${(100 - subtotal).toFixed(2)} more for free shipping!
+                  Add Rs:{(100 - subtotal).toFixed(2)} more for free shipping!
                 </p>
               )}
 
               <div className="border-t pt-3 mt-3">
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span className="text-primary">${total.toFixed(2)}</span>
+                  <span className="text-primary">Rs:{total.toFixed(2)}</span>
                 </div>
               </div>
             </div>

@@ -12,10 +12,11 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
-import { Heart, Eye, ShoppingCart, Star } from "lucide-react";
+import { Heart, Eye, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Product } from "@/types/product";
 import { addToCart } from "@/lib/store/slices/cart-slice";
+import { addToWishlist } from "@/lib/store/slices/wishlist-slice";
 
 interface ProductCardProps {
   product: Product;
@@ -46,10 +47,20 @@ export function ProductCard({ product }: ProductCardProps) {
         image: product.product_image_urls[0],
       })
     );
+    alert(`${product.product_name} added to cart!`);
   };
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
     e.stopPropagation();
+    dispatch(
+      addToWishlist({
+        id: product.id,
+        name: product.product_name,
+        price: product.selling_price,
+        stock: product.quantity,
+        image: product.product_image_urls[0],
+      })
+    );
   };
 
   const handleViewDetails = (e: React.MouseEvent) => {
@@ -123,14 +134,16 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Product Info */}
-        <div className="p-4">
-          <h3 className="font-semibold text-lg line-clamp-2 min-h-10">
+        <div className="p-4 flex flex-col">
+          <h3 className="font-semibold text-lg line-clamp-2">
             {product.product_name}
           </h3>
 
           {/* description */}
           {product.product_desc && (
-            <span className="text-sm font-medium">{product.product_desc}</span>
+            <span className="text-sm font-medium h-20 line-clamp-3">
+              {product.product_desc}
+            </span>
           )}
 
           {/* Price */}

@@ -1,4 +1,3 @@
-// lib/store/services/productsApi.ts
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { Product } from "@/types/product";
 import { ApiResourceList } from "@/types/common";
@@ -6,7 +5,7 @@ import { ApiResourceList } from "@/types/common";
 export const productsApi = createApi({
   reducerPath: "productsApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL, // relative to Next.js API routes
+    baseUrl: process.env.NEXT_PUBLIC_API_URL,
   }),
   tagTypes: ["Products"],
   endpoints: (builder) => ({
