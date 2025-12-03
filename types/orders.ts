@@ -4,8 +4,6 @@ import {
   SELLING_METHODS,
 } from "@/lib/constants/orders";
 import { ApiResource } from "./common";
-import z from "zod";
-import { onlineManualOrderSchema } from "@/lib/schema.orders";
 
 export type Order = {
   order_id: string;
