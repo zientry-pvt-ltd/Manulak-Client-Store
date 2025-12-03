@@ -530,7 +530,7 @@ export default function CheckoutPage() {
                       <Input
                         id="paymentDate"
                         type="date"
-                        value={form.getValues("paymentData.payment_date")}
+                        value={form.getValues("paymentData.payment_date").split("T")[0] || ""}
                         onChange={(e) => {
                           const utcString = new Date(
                             e.target.value
