@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -10,103 +11,257 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, CreditCard, Truck } from "lucide-react";
-import { useState } from "react";
-import Image from "next/image";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-// Dummy cart data
-const cartItems = [
-  {
-    id: "1",
-    name: "Wireless Bluetooth Headphones",
-    price: 89.99,
-    quantity: 2,
-    image:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&h=100&fit=crop",
-  },
-  {
-    id: "2",
-    name: "Smart Watch Series 5",
-    price: 249.99,
-    quantity: 1,
-    image:
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&h=100&fit=crop",
-  },
-  {
-    id: "3",
-    name: "Premium Leather Laptop Bag",
-    price: 129.99,
-    quantity: 1,
-    image:
-      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=100&h=100&fit=crop",
-  },
-];
+import { CreditCard, Truck, AlertCircle, CheckCircle2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import Image from "next/image";
+import {
+  useCalculateOrderValueMutation,
+  useCreateOrderMutation,
+  useUploadPaymentSlipMutation,
+} from "@/lib/store/services/orders-api";
+import { useAppSelector } from "@/lib/store/hooks";
+import z from "zod";
+import { onlineManualOrderSchema } from "@/lib/schema.orders";
+import { PAYMENT_METHOD_OPTIONS } from "@/lib/constants/orders";
+import { PaymentMethod } from "@/types/orders";
+import { toast } from "sonner";
+import BankDetails from "@/components/features/checkout/bank-details";
+
+export type FormFieldValues = z.infer<typeof onlineManualOrderSchema>;
 
 export default function CheckoutPage() {
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    addressLine1: "",
-    addressLine2: "",
-    addressLine3: "",
-    city: "",
-    state: "",
-    postalCode: "",
-    country: "United States",
-    paymentMethod: "credit-card",
-    cardNumber: "",
-    cardName: "",
-    expiryDate: "",
-    cvv: "",
-    notes: "",
-  });
+  const { items: storedCartItems } = useAppSelector((state) => state.cart);
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData({ ...formData, [field]: value });
+  const [createOrder, { isLoading: isCreatingOrder }] =
+    useCreateOrderMutation();
+  const [uploadPaymentSlip, { isLoading: isUploadingPaymentSlip }] =
+    useUploadPaymentSlipMutation();
+  const [calculateOrderValue, { data, error, isLoading }] =
+    useCalculateOrderValueMutation();
+
+  const calculationSummary = data?.data;
+
+  const [localSlipFile, setLocalSlipFile] = useState<File | null>(null);
+  const [submitStatus, setSubmitStatus] = useState<{
+    type: "success" | "error" | null;
+    message: string;
+  }>({ type: null, message: "" });
+
+  const validatePhoneMatch = () => {
+    const primaryPhone = form.getValues("orderMetaData.primary_phone_number");
+    const confirmPhone = form.getValues("orderMetaData.confirm_phone_number");
+
+    if (primaryPhone && !confirmPhone) {
+      form.setError("orderMetaData.confirm_phone_number", {
+        message: "Please confirm the phone number",
+        type: "setValueAs",
+      });
+      return false;
+    }
+
+    if (!confirmPhone) {
+      form.clearErrors("orderMetaData.confirm_phone_number");
+      return true;
+    }
+
+    if (primaryPhone !== confirmPhone) {
+      form.setError("orderMetaData.confirm_phone_number", {
+        message: "Phone numbers do not match",
+        type: "setValueAs",
+      });
+      return false;
+    }
+
+    form.clearErrors("orderMetaData.confirm_phone_number");
+    return true;
   };
 
-  const handlePlaceOrder = () => {
-    // Validate required fields
-    const requiredFields = [
-      "firstName",
-      "lastName",
-      "email",
-      "phone",
-      "addressLine1",
-      "city",
-      "state",
-      "postalCode",
-      "cardName",
-      "cardNumber",
-      "expiryDate",
-      "cvv",
-    ];
+  const form = useForm<FormFieldValues>({
+    resolver: zodResolver(onlineManualOrderSchema),
+    mode: "onChange",
+    defaultValues: {
+      orderMetaData: {
+        first_name: "Arun",
+        last_name: "Deshan",
+        selling_method: "ONLINE",
+        order_value: 1200,
+        address_line_1: "Matara",
+        address_line_2: "",
+        address_line_3: "",
+        postal_code: 0,
+        primary_phone_number: "0998876543",
+        confirm_phone_number: "0998876543",
+        status: "PENDING",
+        payment_method: "COD",
+      },
+      paymentData: {
+        payment_date: "",
+        paid_amount: 1200,
+        payment_slip_number: "SLIP9090",
+      },
+      orderItemsData: storedCartItems.map((item) => ({
+        product_id: item.id,
+        required_quantity: item.quantity,
+      })),
+    },
+  });
 
-    const missingFields = requiredFields.filter(
-      (field) => !formData[field as keyof typeof formData]
-    );
+  const handlePlaceOrder = async () => {
+    setSubmitStatus({ type: null, message: "" });
 
-    if (missingFields.length > 0) {
-      alert("Please fill in all required fields marked with *");
+    // Check if calculation summary is available
+    if (calculationSummary == null) {
+      const errorMsg =
+        "Unable to calculate order value. Please try again later or contact support.";
+      setSubmitStatus({ type: "error", message: errorMsg });
+      toast.error(errorMsg);
       return;
     }
 
-    alert("Order placed successfully! (This is a demo)");
-    console.log("Order data:", formData);
+    // Validate phone numbers match
+    if (!validatePhoneMatch()) {
+      toast.error("Phone numbers do not match. Please check and try again.");
+      return;
+    }
+
+    // Trigger form validation
+    const isValid = await form.trigger();
+
+    if (!isValid) {
+      const errorMsg =
+        "Please correct the errors in the form before submitting.";
+      setSubmitStatus({ type: "error", message: errorMsg });
+      toast.error(errorMsg);
+
+      // Scroll to first error
+      const firstError = Object.keys(form.formState.errors)[0];
+      if (firstError) {
+        const element = document.getElementById(firstError);
+        element?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      return;
+    }
+
+    // Check if cart is empty
+    if (storedCartItems.length === 0) {
+      const errorMsg =
+        "Your cart is empty. Please add items before placing an order.";
+      setSubmitStatus({ type: "error", message: errorMsg });
+      toast.error(errorMsg);
+      return;
+    }
+
+    try {
+      const values = form.getValues();
+      const { orderItemsData, orderMetaData, paymentData } = values;
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { confirm_phone_number, ...orderMetaDataWithoutConfirm } =
+        orderMetaData;
+
+      const updatedOrderMetaData = {
+        ...orderMetaDataWithoutConfirm,
+        order_value: calculationSummary.totalValue,
+      };
+
+      const updatedData = {
+        orderMetaData: updatedOrderMetaData,
+        orderItemsData: orderItemsData,
+        paymentData: paymentData,
+      };
+
+      console.log("Placing order with values:", updatedData);
+
+      // Show processing toast
+      toast.loading("Processing your order...", { id: "order-process" });
+
+      // Create the order
+      const order = await createOrder(updatedData).unwrap();
+
+      toast.success("Order created successfully!", { id: "order-process" });
+      console.log("Order created:", order);
+
+      // Upload payment slip if provided
+      if (localSlipFile) {
+        toast.loading("Uploading payment slip...", {
+          id: "payment-slip-upload",
+        });
+
+        try {
+          await uploadPaymentSlip({
+            id: order.data.paymentId,
+            file: localSlipFile,
+          }).unwrap();
+
+          toast.success("Payment slip uploaded successfully!", {
+            id: "payment-slip-upload",
+          });
+        } catch (uploadError) {
+          console.error("Payment slip upload error:", uploadError);
+          toast.error("Failed to upload payment slip, but order was created.", {
+            id: "payment-slip-upload",
+          });
+        }
+      }
+
+      // Final success message
+      const successMsg =
+        "Order placed successfully! You will receive a confirmation shortly.";
+      setSubmitStatus({ type: "success", message: successMsg });
+      toast.success(successMsg);
+
+      // Reset form after successful submission
+      setTimeout(() => {
+        form.reset();
+        setLocalSlipFile(null);
+        setSubmitStatus({ type: null, message: "" });
+      }, 3000);
+    } catch (err: any) {
+      console.error("Order submission error:", err);
+
+      // Dismiss any loading toasts
+      toast.dismiss("order-process");
+      toast.dismiss("payment-slip-upload");
+
+      // Extract error message
+      const errorMessage =
+        err?.data?.message ||
+        err?.message ||
+        "Failed to place order. Please try again or contact support.";
+
+      setSubmitStatus({ type: "error", message: errorMessage });
+      toast.error(errorMessage);
+    }
   };
 
-  // Calculate totals
-  const subtotal = cartItems.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  );
-  const tax = subtotal * 0.1;
-  const shipping = subtotal > 100 ? 0 : 10;
-  const total = subtotal + tax + shipping;
+  useEffect(() => {
+    if (storedCartItems.length === 0) return;
+
+    const orderItemsArray = storedCartItems.map((item) => ({
+      product_id: item.id,
+      required_quantity: item.quantity,
+    }));
+
+    calculateOrderValue({ orderItemsArray });
+  }, [calculateOrderValue, storedCartItems]);
+
+  // Show toast when calculation fails
+  useEffect(() => {
+    if (error) {
+      toast.error("Failed to calculate order value. Please try again.");
+    }
+  }, [error]);
+
+  const getErrorMessage = (error: any) => {
+    return error?.message || "";
+  };
+
+  const isSubmitting = isCreatingOrder || isUploadingPaymentSlip;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -116,8 +271,44 @@ export default function CheckoutPage() {
           <h1 className="text-3xl font-bold">Checkout</h1>
         </div>
 
+        {/* Global Status Messages */}
+        {submitStatus.type && (
+          <Alert
+            className={`mb-6 ${
+              submitStatus.type === "success"
+                ? "border-green-500 bg-green-50"
+                : "border-red-500 bg-red-50"
+            }`}
+          >
+            {submitStatus.type === "success" ? (
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+            ) : (
+              <AlertCircle className="h-4 w-4 text-red-600" />
+            )}
+            <AlertDescription
+              className={
+                submitStatus.type === "success"
+                  ? "text-green-800"
+                  : "text-red-800"
+              }
+            >
+              {submitStatus.message}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Empty Cart Warning */}
+        {storedCartItems.length === 0 && (
+          <Alert className="mb-6 border-yellow-500 bg-yellow-50">
+            <AlertCircle className="h-4 w-4 text-yellow-600" />
+            <AlertDescription className="text-yellow-800">
+              Your cart is empty. Please add items to proceed with checkout.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Side - Form (Scrollable) */}
+          {/* Left Side - Form */}
           <div className="lg:col-span-2">
             <div className="space-y-6">
               {/* Contact Information */}
@@ -130,47 +321,90 @@ export default function CheckoutPage() {
                     <Label htmlFor="firstName">First Name *</Label>
                     <Input
                       id="firstName"
-                      value={formData.firstName}
-                      onChange={(e) =>
-                        handleInputChange("firstName", e.target.value)
-                      }
                       placeholder="John"
+                      {...form.register("orderMetaData.first_name")}
+                      className={
+                        form.formState.errors.orderMetaData?.first_name
+                          ? "border-red-500"
+                          : ""
+                      }
                     />
+                    {form.formState.errors.orderMetaData?.first_name && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {getErrorMessage(
+                          form.formState.errors.orderMetaData.first_name
+                        )}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="lastName">Last Name *</Label>
                     <Input
                       id="lastName"
-                      value={formData.lastName}
-                      onChange={(e) =>
-                        handleInputChange("lastName", e.target.value)
-                      }
                       placeholder="Doe"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">Email Address *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) =>
-                        handleInputChange("email", e.target.value)
+                      {...form.register("orderMetaData.last_name")}
+                      className={
+                        form.formState.errors.orderMetaData?.last_name
+                          ? "border-red-500"
+                          : ""
                       }
-                      placeholder="john.doe@example.com"
                     />
+                    {form.formState.errors.orderMetaData?.last_name && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {getErrorMessage(
+                          form.formState.errors.orderMetaData.last_name
+                        )}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="phone">Phone Number *</Label>
                     <Input
                       id="phone"
                       type="tel"
-                      value={formData.phone}
-                      onChange={(e) =>
-                        handleInputChange("phone", e.target.value)
-                      }
                       placeholder="+1 (555) 123-4567"
+                      {...form.register("orderMetaData.primary_phone_number")}
+                      className={
+                        form.formState.errors.orderMetaData
+                          ?.primary_phone_number
+                          ? "border-red-500"
+                          : ""
+                      }
                     />
+                    {form.formState.errors.orderMetaData
+                      ?.primary_phone_number && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {getErrorMessage(
+                          form.formState.errors.orderMetaData
+                            .primary_phone_number
+                        )}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="confirmPhone">Confirm Phone Number *</Label>
+                    <Input
+                      id="confirmPhone"
+                      type="tel"
+                      placeholder="+1 (555) 123-4567"
+                      {...form.register("orderMetaData.confirm_phone_number")}
+                      onBlur={validatePhoneMatch}
+                      className={
+                        form.formState.errors.orderMetaData
+                          ?.confirm_phone_number
+                          ? "border-red-500"
+                          : ""
+                      }
+                    />
+                    {form.formState.errors.orderMetaData
+                      ?.confirm_phone_number && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {getErrorMessage(
+                          form.formState.errors.orderMetaData
+                            .confirm_phone_number
+                        )}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -186,97 +420,68 @@ export default function CheckoutPage() {
                     <Label htmlFor="addressLine1">Address Line 1 *</Label>
                     <Input
                       id="addressLine1"
-                      value={formData.addressLine1}
-                      onChange={(e) =>
-                        handleInputChange("addressLine1", e.target.value)
-                      }
                       placeholder="123 Main Street"
+                      {...form.register("orderMetaData.address_line_1")}
+                      className={
+                        form.formState.errors.orderMetaData?.address_line_1
+                          ? "border-red-500"
+                          : ""
+                      }
                     />
+                    {form.formState.errors.orderMetaData?.address_line_1 && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {getErrorMessage(
+                          form.formState.errors.orderMetaData.address_line_1
+                        )}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="addressLine2">Address Line 2</Label>
                     <Input
                       id="addressLine2"
-                      value={formData.addressLine2}
-                      onChange={(e) =>
-                        handleInputChange("addressLine2", e.target.value)
-                      }
                       placeholder="Apartment, suite, etc. (optional)"
+                      {...form.register("orderMetaData.address_line_2")}
                     />
                   </div>
                   <div>
                     <Label htmlFor="addressLine3">Address Line 3</Label>
                     <Input
                       id="addressLine3"
-                      value={formData.addressLine3}
-                      onChange={(e) =>
-                        handleInputChange("addressLine3", e.target.value)
-                      }
                       placeholder="Additional address info (optional)"
+                      {...form.register("orderMetaData.address_line_3")}
                     />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="city">City *</Label>
-                      <Input
-                        id="city"
-                        value={formData.city}
-                        onChange={(e) =>
-                          handleInputChange("city", e.target.value)
-                        }
-                        placeholder="New York"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="state">State / Province *</Label>
-                      <Input
-                        id="state"
-                        value={formData.state}
-                        onChange={(e) =>
-                          handleInputChange("state", e.target.value)
-                        }
-                        placeholder="NY"
-                      />
-                    </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="postalCode">Postal Code *</Label>
                       <Input
                         id="postalCode"
-                        value={formData.postalCode}
-                        onChange={(e) =>
-                          handleInputChange("postalCode", e.target.value)
-                        }
                         placeholder="10001"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="country">Country *</Label>
-                      <Select
-                        value={formData.country}
-                        onValueChange={(value) =>
-                          handleInputChange("country", value)
+                        type="number"
+                        {...form.register("orderMetaData.postal_code", {
+                          valueAsNumber: true,
+                        })}
+                        className={
+                          form.formState.errors.orderMetaData?.postal_code
+                            ? "border-red-500"
+                            : ""
                         }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="United States">
-                            United States
-                          </SelectItem>
-                          <SelectItem value="Canada">Canada</SelectItem>
-                          <SelectItem value="United Kingdom">
-                            United Kingdom
-                          </SelectItem>
-                          <SelectItem value="Australia">Australia</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      />
+                      {form.formState.errors.orderMetaData?.postal_code && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {getErrorMessage(
+                            form.formState.errors.orderMetaData.postal_code
+                          )}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
+
+              {/* Bank Details - Accordion */}
+              <BankDetails />
 
               {/* Payment Information */}
               <div className="bg-white rounded-lg p-6 shadow-sm">
@@ -285,105 +490,190 @@ export default function CheckoutPage() {
                   Payment Information
                 </h2>
                 <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="paymentMethod">Payment Method *</Label>
-                    <Select
-                      value={formData.paymentMethod}
-                      onValueChange={(value) =>
-                        handleInputChange("paymentMethod", value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="credit-card">Credit Card</SelectItem>
-                        <SelectItem value="debit-card">Debit Card</SelectItem>
-                        <SelectItem value="paypal">PayPal</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="cardName">Cardholder Name *</Label>
-                    <Input
-                      id="cardName"
-                      value={formData.cardName}
-                      onChange={(e) =>
-                        handleInputChange("cardName", e.target.value)
-                      }
-                      placeholder="John Doe"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="cardNumber">Card Number *</Label>
-                    <Input
-                      id="cardNumber"
-                      value={formData.cardNumber}
-                      onChange={(e) =>
-                        handleInputChange("cardNumber", e.target.value)
-                      }
-                      placeholder="1234 5678 9012 3456"
-                      maxLength={19}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="expiryDate">Expiry Date *</Label>
-                      <Input
-                        id="expiryDate"
-                        value={formData.expiryDate}
-                        onChange={(e) =>
-                          handleInputChange("expiryDate", e.target.value)
+                      <Label htmlFor="paymentMethod">Payment Method *</Label>
+                      <Select
+                        value={form.getValues("orderMetaData.payment_method")}
+                        onValueChange={(value) =>
+                          form.setValue(
+                            "orderMetaData.payment_method",
+                            value as PaymentMethod,
+                            {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            }
+                          )
                         }
-                        placeholder="MM/YY"
-                        maxLength={5}
-                      />
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PAYMENT_METHOD_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {form.formState.errors.orderMetaData?.payment_method && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {getErrorMessage(
+                            form.formState.errors.orderMetaData.payment_method
+                          )}
+                        </p>
+                      )}
                     </div>
                     <div>
-                      <Label htmlFor="cvv">CVV *</Label>
+                      <Label htmlFor="paymentDate">Payment Date *</Label>
                       <Input
-                        id="cvv"
-                        value={formData.cvv}
-                        onChange={(e) =>
-                          handleInputChange("cvv", e.target.value)
+                        id="paymentDate"
+                        type="date"
+                        value={form.getValues("paymentData.payment_date")}
+                        onChange={(e) => {
+                          const utcString = new Date(
+                            e.target.value
+                          ).toISOString();
+
+                          form.setValue(
+                            "paymentData.payment_date",
+                            utcString || "",
+                            {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            }
+                          );
+                        }}
+                        className={
+                          form.formState.errors.paymentData?.payment_date
+                            ? "border-red-500"
+                            : ""
                         }
-                        placeholder="123"
-                        maxLength={4}
                       />
+                      {form.formState.errors.paymentData?.payment_date && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {getErrorMessage(
+                            form.formState.errors.paymentData.payment_date
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="paidAmount">Paid Amount *</Label>
+                      <Input
+                        id="paidAmount"
+                        placeholder="1000"
+                        type="number"
+                        {...form.register("paymentData.paid_amount", {
+                          valueAsNumber: true,
+                        })}
+                        className={
+                          form.formState.errors.paymentData?.paid_amount
+                            ? "border-red-500"
+                            : ""
+                        }
+                      />
+                      {form.formState.errors.paymentData?.paid_amount && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {getErrorMessage(
+                            form.formState.errors.paymentData.paid_amount
+                          )}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="paymentSlipNumber">
+                        Payment Slip Number *
+                      </Label>
+                      <Input
+                        id="paymentSlipNumber"
+                        placeholder="12345"
+                        maxLength={5}
+                        {...form.register("paymentData.payment_slip_number")}
+                        className={
+                          form.formState.errors.paymentData?.payment_slip_number
+                            ? "border-red-500"
+                            : ""
+                        }
+                      />
+                      {form.formState.errors.paymentData
+                        ?.payment_slip_number && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {getErrorMessage(
+                            form.formState.errors.paymentData
+                              .payment_slip_number
+                          )}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Additional Notes */}
+              {/* Upload Payment Slip */}
               <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">Order Notes</h2>
+                <h2 className="text-xl font-semibold mb-4">
+                  Upload Payment Slip
+                </h2>
                 <div>
-                  <Label htmlFor="notes">
-                    Additional Information (Optional)
-                  </Label>
-                  <Textarea
-                    id="notes"
-                    value={formData.notes}
-                    onChange={(e) => handleInputChange("notes", e.target.value)}
-                    placeholder="Special delivery instructions, gift message, etc."
-                    rows={4}
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        // Validate file size (max 5MB)
+                        if (file.size > 5 * 1024 * 1024) {
+                          const errorMsg = "File size must be less than 5MB";
+                          setSubmitStatus({ type: "error", message: errorMsg });
+                          toast.error(errorMsg);
+                          return;
+                        }
+                        setLocalSlipFile(file);
+                        setSubmitStatus({ type: null, message: "" });
+                        toast.success(
+                          `File "${file.name}" selected successfully`
+                        );
+                      }
+                    }}
+                    className="block w-full text-sm text-gray-500
+                      file:mr-4 file:py-2 file:px-4
+                      file:rounded-md file:border-0
+                      file:text-sm file:font-semibold
+                      file:bg-primary file:text-white
+                      hover:file:bg-primary/90
+                      cursor-pointer"
                   />
+                  {localSlipFile && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <p className="text-sm text-gray-600">
+                        Selected: {localSlipFile.name}
+                      </p>
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500 mt-2">
+                    Accepted formats: JPG, PNG, PDF (Max 5MB)
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right Side - Order Summary (Sticky) */}
+          {/* Right Side - Order Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg p-6 shadow-sm sticky top-20">
               <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
 
               {/* Cart Items */}
               <div className="space-y-4 mb-4 max-h-64 overflow-y-auto">
-                {cartItems.map((item) => (
+                {storedCartItems.map((item) => (
                   <div key={item.id} className="flex gap-3">
-                    <div className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden bg-gray-100">
+                    <div className="relative w-16 h-16 shrink-0 rounded-md overflow-hidden bg-gray-100">
                       <Image
                         src={item.image}
                         alt={item.name}
@@ -399,7 +689,7 @@ export default function CheckoutPage() {
                         Qty: {item.quantity}
                       </p>
                       <p className="text-sm font-semibold text-primary">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        Rs:{(item.price * item.quantity).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -408,38 +698,70 @@ export default function CheckoutPage() {
 
               <Separator className="my-4" />
 
+              {/* Calculation Status */}
+              {error && (
+                <Alert className="mb-4 border-red-500 bg-red-50">
+                  <AlertCircle className="h-4 w-4 text-red-600" />
+                  <AlertDescription className="text-red-800">
+                    Problem calculating order value. Please try again.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {isLoading && (
+                <div className="mb-4 text-center text-sm text-gray-600">
+                  <div className="animate-pulse">
+                    Calculating order value...
+                  </div>
+                </div>
+              )}
+
               {/* Pricing Breakdown */}
-              <div className="space-y-2 mb-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">${subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Tax (10%)</span>
-                  <span className="font-medium">${tax.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Shipping</span>
-                  <span className="font-medium">
-                    {shipping === 0 ? (
-                      <span className="text-green-600">FREE</span>
-                    ) : (
-                      `$${shipping.toFixed(2)}`
-                    )}
-                  </span>
-                </div>
+              {calculationSummary && (
+                <div className="space-y-2 mb-4">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Subtotal</span>
+                    <span className="font-medium">
+                      Rs:{calculationSummary.itemsValue.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Shipping</span>
+                    <span className="font-medium">
+                      {calculationSummary.courierValue === 0 ? (
+                        <span className="text-green-600">FREE</span>
+                      ) : (
+                        `Rs:${calculationSummary.courierValue.toFixed(2)}`
+                      )}
+                    </span>
+                  </div>
 
-                <Separator className="my-3" />
+                  <Separator className="my-3" />
 
-                <div className="flex justify-between text-lg font-bold">
-                  <span>Total</span>
-                  <span className="text-primary">${total.toFixed(2)}</span>
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total</span>
+                    <span className="text-primary">
+                      Rs:{calculationSummary.totalValue.toFixed(2)}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Place Order Button */}
-              <Button onClick={handlePlaceOrder} className="w-full" size="lg">
-                Place Order
+              <Button
+                onClick={handlePlaceOrder}
+                className="w-full"
+                size="lg"
+                disabled={isSubmitting || storedCartItems.length === 0}
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin">⏳</span>
+                    Processing...
+                  </span>
+                ) : (
+                  "Place Order"
+                )}
               </Button>
 
               <p className="text-xs text-center text-gray-500 mt-4">
