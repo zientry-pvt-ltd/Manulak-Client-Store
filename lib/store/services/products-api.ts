@@ -1,13 +1,8 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { Product } from "@/types/product";
 import { ApiResourceList } from "@/types/common";
+import { api } from "./api";
 
-export const productsApi = createApi({
-  reducerPath: "productsApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL,
-  }),
-  tagTypes: ["Products"],
+export const productsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getProducts: builder.query<ApiResourceList<Product>, void>({
       query: () => ({
@@ -19,14 +14,13 @@ export const productsApi = createApi({
           sorting: { columnName: "created_at", order: -1 },
         },
       }),
-      providesTags: ["Products"],
     }),
-
     getProductById: builder.query<Product, string>({
-      query: (id) => `/products/${id}`,
-      providesTags: (_result, _error, id) => [{ type: "Products", id }],
+      query: (productId) => ({
+        url: `/product/get-product/${productId}`,
+        method: "GET",
+      }),
     }),
   }),
 });
-
 export const { useGetProductsQuery, useGetProductByIdQuery } = productsApi;

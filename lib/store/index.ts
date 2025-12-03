@@ -14,14 +14,14 @@ import storage from "redux-persist/lib/storage";
 import orderReducer from "./slices/order-slice";
 import cartReducer from "./slices/cart-slice";
 import wishlistReducer from "./slices/wishlist-slice";
-import { productsApi } from "./services/products-api";
+import { api } from "./services/api";
 
 const rootReducer = combineReducers({
   order: orderReducer,
   cart: cartReducer,
   wishlist: wishlistReducer,
 
-  [productsApi.reducerPath]: productsApi.reducer,
+  [api.reducerPath]: api.reducer,
 });
 
 const persistConfig = {
@@ -41,7 +41,7 @@ export const makeStore = () => {
         serializableCheck: {
           ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
         },
-      }).concat(productsApi.middleware),
+      }).concat(api.middleware),
   });
 };
 

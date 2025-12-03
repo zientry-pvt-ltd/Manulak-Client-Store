@@ -11,7 +11,7 @@ import {
   ShoppingBag,
   RotateCcw,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,12 +29,16 @@ import {
   updateQuantity,
 } from "@/lib/store/slices/cart-slice";
 import { useRouter } from "next/navigation";
+import { useCalculateOrderValueMutation } from "@/lib/store/services/orders-api";
 
 export default function CartPage() {
   const [showClearDialog, setShowClearDialog] = useState(false);
-  const { items: storedCartItems, totalAmount } = useAppSelector(
-    (state) => state.cart
-  );
+  const { items: storedCartItems } = useAppSelector((state) => state.cart);
+
+  const [calculateOrderValue, { data, error, isLoading }] =
+    useCalculateOrderValueMutation();
+
+  const calculationSummary = data?.data;
 
   const dispatch = useAppDispatch();
   const navigate = useRouter();
@@ -44,7 +48,7 @@ export default function CartPage() {
   };
 
   const handleUpdateQuantity = (itemId: string, newQuantity: number) => {
-    if (newQuantity > 0 && newQuantity <= 99) {
+    if (newQuantity > 0) {
       dispatch(updateQuantity({ id: itemId, quantity: newQuantity }));
     }
   };
@@ -61,14 +65,16 @@ export default function CartPage() {
     navigate.push("/products");
   };
 
-  // Calculate totals
-  const subtotal = storedCartItems.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  );
-  const tax = subtotal * 0.1; // 10% tax
-  const shipping = subtotal > 100 ? 0 : 10; // Free shipping over $100
-  const total = subtotal + tax + shipping;
+  useEffect(() => {
+    if (storedCartItems.length > 0) {
+      const orderItemsArray = storedCartItems.map((item) => ({
+        product_id: item.id,
+        required_quantity: item.quantity,
+      }));
+
+      calculateOrderValue({ orderItemsArray });
+    }
+  }, [storedCartItems, calculateOrderValue]);
 
   if (storedCartItems.length === 0) {
     return (
@@ -138,7 +144,7 @@ export default function CartPage() {
                     {item.name}
                   </h3>
                   <p className="text-xl font-bold text-primary mb-3">
-                    ${item.price.toFixed(2)}
+                    Rs:{item.price.toFixed(2)}
                   </p>
 
                   {/* Quantity Controls */}
@@ -166,7 +172,7 @@ export default function CartPage() {
                           parseInt(e.target.value) || 1
                         )
                       }
-                      className="w-16 h-8 text-center"
+                      className="w-20 h-8 text-center"
                     />
 
                     <Button
@@ -182,7 +188,7 @@ export default function CartPage() {
                     </Button>
 
                     <span className="text-sm text-gray-500 ml-2">
-                      = ${(item.price * item.quantity).toFixed(2)}
+                      = Rs:{(item.price * item.quantity).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -215,39 +221,45 @@ export default function CartPage() {
 
         {/* Order Summary Section */}
         <div className="lg:col-span-1">
-          <div className="border rounded-lg p-6 bg-white sticky top-4">
+          <div className="border rounded-lg p-6 bg-white sticky top-4 min-h-[330px] flex flex-col justify-between">
             <h2 className="text-2xl font-bold mb-6">Order Summary</h2>
 
-            <div className="space-y-3 mb-6">
-              <div className="flex justify-between text-gray-600">
-                <span>Subtotal</span>
-                <span className="font-medium">Rs:{totalAmount.toFixed(2)}</span>
-              </div>
+            {error && (
+              <span>Problem calculating order value. Please try again.</span>
+            )}
 
-              <div className="flex justify-between text-gray-600">
-                <span>Shipping</span>
-                <span className="font-medium">
-                  {shipping === 0 ? (
-                    <span className="text-green-600">FREE</span>
-                  ) : (
-                    `RS:${shipping.toFixed(2)}`
-                  )}
-                </span>
-              </div>
+            {isLoading && <span>Calculating order value...</span>}
 
-              {subtotal < 100 && (
-                <p className="text-xs text-gray-500 italic">
-                  Add Rs:{(100 - subtotal).toFixed(2)} more for free shipping!
-                </p>
-              )}
+            {calculationSummary && (
+              <div className="space-y-3 mb-6">
+                <div className="flex justify-between text-gray-600">
+                  <span>Subtotal</span>
+                  <span className="font-medium">
+                    Rs:{calculationSummary.itemsValue.toFixed(2)}
+                  </span>
+                </div>
 
-              <div className="border-t pt-3 mt-3">
-                <div className="flex justify-between text-lg font-bold">
-                  <span>Total</span>
-                  <span className="text-primary">Rs:{total.toFixed(2)}</span>
+                <div className="flex justify-between text-gray-600">
+                  <span>Shipping</span>
+                  <span className="font-medium">
+                    {calculationSummary.courierValue === 0 ? (
+                      <span className="text-green-600">FREE</span>
+                    ) : (
+                      `RS:${calculationSummary.courierValue.toFixed(2)}`
+                    )}
+                  </span>
+                </div>
+
+                <div className="border-t pt-3 mt-3">
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total</span>
+                    <span className="text-primary">
+                      Rs:{calculationSummary.totalValue.toFixed(2)}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div className="space-y-3">
               <Button
