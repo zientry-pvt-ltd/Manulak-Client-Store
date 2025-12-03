@@ -362,7 +362,7 @@ export default function CheckoutPage() {
                     <Input
                       id="phone"
                       type="tel"
-                      placeholder="+1 (555) 123-4567"
+                      placeholder="0771122345"
                       {...form.register("orderMetaData.primary_phone_number")}
                       className={
                         form.formState.errors.orderMetaData
@@ -386,7 +386,7 @@ export default function CheckoutPage() {
                     <Input
                       id="confirmPhone"
                       type="tel"
-                      placeholder="+1 (555) 123-4567"
+                      placeholder="0771122345"
                       {...form.register("orderMetaData.confirm_phone_number")}
                       onBlur={validatePhoneMatch}
                       className={

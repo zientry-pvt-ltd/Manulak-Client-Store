@@ -2,12 +2,25 @@ import {
   CalculateOrderValueRequest,
   CalculateOrderValueResponse,
   OnlineManualOrder,
+  Order,
   OrderCreateResponse,
 } from "@/types/orders";
 import { api } from "./api";
+import { ApiResource } from "@/types/common";
 
 export const ordersApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getOrderStatus: builder.query<
+      ApiResource<Order>,
+      { orderId: string; phoneNumber: string }
+    >({
+      query: ({ orderId, phoneNumber }) => ({
+        url: "store/order-status",
+        method: "GET",
+        params: { phoneNumber, orderId },
+      }),
+    }),
+
     createOrder: builder.mutation<OrderCreateResponse, OnlineManualOrder>({
       query: (body) => {
         return {
@@ -47,4 +60,5 @@ export const {
   useCalculateOrderValueMutation,
   useCreateOrderMutation,
   useUploadPaymentSlipMutation,
+  useLazyGetOrderStatusQuery,
 } = ordersApi;
