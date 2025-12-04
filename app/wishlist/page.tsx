@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { Heart, ShoppingCart, Trash2 } from "lucide-react";
+import { Heart, ShoppingBag, ShoppingCart, Trash2 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
 import { removeFromWishlist } from "@/lib/store/slices/wishlist-slice";
 import { addToCart } from "@/lib/store/slices/cart-slice";
@@ -51,7 +51,8 @@ export default function Page() {
             Start adding products you love to your favorites!
           </p>
           <Button onClick={() => navigate.push("/products")}>
-            Browse Products
+            <ShoppingBag className="mr-2 h-4 w-4" />
+            Continue Shopping
           </Button>
         </div>
       </div>

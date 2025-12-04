@@ -89,7 +89,7 @@ export default function CartPage() {
             Add some products to your cart to get started!
           </p>
           <Button onClick={handleReturnToShop} size="lg">
-            <ShoppingBag className="mr-2 h-5 w-5" />
+            <ShoppingBag className="mr-2 h-4 w-4" />
             Continue Shopping
           </Button>
         </div>
