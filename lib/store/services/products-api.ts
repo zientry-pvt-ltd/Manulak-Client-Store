@@ -4,12 +4,12 @@ import { api } from "./api";
 
 export const productsApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getProducts: builder.query<ApiResourceList<Product>, void>({
-      query: () => ({
+    getProducts: builder.query<ApiResourceList<Product>, number>({
+      query: (pageNo) => ({
         url: "/product/get-all-products",
         method: "POST",
         body: {
-          paging: { pageNo: 1, pageSize: 100 },
+          paging: { pageNo: pageNo, pageSize: 6 },
           filters: [],
           sorting: { columnName: "created_at", order: -1 },
         },

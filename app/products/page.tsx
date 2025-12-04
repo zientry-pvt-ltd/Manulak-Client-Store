@@ -7,12 +7,22 @@ import { Badge } from "@/components/ui/badge";
 import { Filter } from "lucide-react";
 import { useGetProductsQuery } from "@/lib/store/services/products-api";
 import { ProductCardSkeleton } from "@/components/features/products/product-card-skelton";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [priceRange, setPriceRange] = useState<string>("All");
+  const [pageNo, setPageNo] = useState<number>(1);
 
-  const { data: products, isLoading } = useGetProductsQuery();
+  const { data: products, isLoading } = useGetProductsQuery(pageNo);
 
   const categories = useMemo(() => {
     const cats = Array.from(
@@ -32,6 +42,61 @@ export default function ProductsPage() {
 
     return filtered;
   }, [products?.data.entities, selectedCategory]);
+
+  const totalPages = products?.data.entities.length || 1;
+
+  const generatePaginationItems = () => {
+    const items = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(i);
+      }
+    } else {
+      items.push(1);
+
+      if (pageNo > 3) {
+        items.push("ellipsis-start");
+      }
+
+      const start = Math.max(2, pageNo - 1);
+      const end = Math.min(totalPages - 1, pageNo + 1);
+
+      for (let i = start; i <= end; i++) {
+        items.push(i);
+      }
+
+      if (pageNo < totalPages - 2) {
+        items.push("ellipsis-end");
+      }
+
+      items.push(totalPages);
+    }
+
+    return items;
+  };
+
+  const paginationItems = generatePaginationItems();
+
+  const handlePreviousPage = () => {
+    if (pageNo > 1) {
+      setPageNo(pageNo - 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const handleNextPage = () => {
+    if (pageNo < totalPages) {
+      setPageNo(pageNo + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    setPageNo(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -57,7 +122,10 @@ export default function ProductsPage() {
                 key={category}
                 variant={selectedCategory === category ? "default" : "outline"}
                 size="sm"
-                onClick={() => setSelectedCategory(category)}
+                onClick={() => {
+                  setSelectedCategory(category);
+                  setPageNo(1);
+                }}
                 className="transition-all duration-200"
               >
                 {category}
@@ -88,6 +156,7 @@ export default function ProductsPage() {
               onClick={() => {
                 setSelectedCategory("All");
                 setPriceRange("All");
+                setPageNo(1);
               }}
             >
               Clear Filters
@@ -99,7 +168,7 @@ export default function ProductsPage() {
       {/* Product Grid - 3 Columns */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <ProductCardSkeleton isLoading={isLoading} />
-        {products?.data.entities.map((product) => (
+        {filteredProducts.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
@@ -116,10 +185,64 @@ export default function ProductsPage() {
             onClick={() => {
               setSelectedCategory("All");
               setPriceRange("All");
+              setPageNo(1);
             }}
           >
             Clear All Filters
           </Button>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {filteredProducts.length > 0 && !isLoading && (
+        <div className="flex justify-center mt-12">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={handlePreviousPage}
+                  className={`${
+                    pageNo === 1
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }`}
+                />
+              </PaginationItem>
+
+              {paginationItems.map((item, index) => {
+                if (item === "ellipsis-start" || item === "ellipsis-end") {
+                  return (
+                    <PaginationItem key={`${item}-${index}`}>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  );
+                }
+
+                return (
+                  <PaginationItem key={item}>
+                    <PaginationLink
+                      onClick={() => handlePageChange(item as number)}
+                      isActive={pageNo === item}
+                      className="cursor-pointer"
+                    >
+                      {item}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
+              })}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={handleNextPage}
+                  className={`${
+                    pageNo === totalPages
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }`}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       )}
     </div>
