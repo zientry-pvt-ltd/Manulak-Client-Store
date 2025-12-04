@@ -7,6 +7,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
 import { removeFromWishlist } from "@/lib/store/slices/wishlist-slice";
 import { addToCart } from "@/lib/store/slices/cart-slice";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function Page() {
   const dispatch = useAppDispatch();
@@ -31,7 +32,7 @@ export default function Page() {
         image: item.image,
       })
     );
-    alert(`${item.name} added to cart!`);
+    toast.success(`${item.name} added to cart!`);
   };
 
   const handleRemoveFromWishlist = (itemId: string) => {
