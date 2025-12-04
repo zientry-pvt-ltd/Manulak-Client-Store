@@ -30,10 +30,18 @@ import {
 } from "@/lib/store/slices/cart-slice";
 import { useRouter } from "next/navigation";
 import { useCalculateOrderValueMutation } from "@/lib/store/services/orders-api";
+import { useLazyGetProductByIdQuery } from "@/lib/store/services/products-api";
 
 export default function CartPage() {
   const [showClearDialog, setShowClearDialog] = useState(false);
+  const [insufficientStockItems, setInsufficientStockItems] = useState<
+    string[]
+  >([]);
+  const [showStockDialog, setShowStockDialog] = useState(false);
   const { items: storedCartItems } = useAppSelector((state) => state.cart);
+
+  const [getProduct, { isLoading: isLoadingProduct }] =
+    useLazyGetProductByIdQuery();
 
   const [calculateOrderValue, { data, error, isLoading }] =
     useCalculateOrderValueMutation();
@@ -57,12 +65,43 @@ export default function CartPage() {
     dispatch(clearCart());
   };
 
-  const handleProceedToCheckout = () => {
-    navigate.push("/checkout");
-  };
-
   const handleReturnToShop = () => {
     navigate.push("/products");
+  };
+
+  const validateStockBeforeCheckout = async () => {
+    const outOfStockItems: string[] = [];
+
+    for (const item of storedCartItems) {
+      try {
+        const { data: product } = await getProduct(item.id).unwrap();
+
+        if (product.quantity < item.quantity)
+          outOfStockItems.push(
+            `${item.name} - Only ${product.quantity} available, but ${item.quantity} in cart`
+          );
+      } catch (err) {
+        outOfStockItems.push(
+          `${item.name} - Product not found. It may have been removed.`
+        );
+        console.error(`Error fetching product ${item.id}:`, err);
+      }
+    }
+
+    if (outOfStockItems.length > 0) {
+      setInsufficientStockItems(outOfStockItems);
+      setShowStockDialog(true);
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleProceedToCheckout = async () => {
+    const isStockValid = await validateStockBeforeCheckout();
+    if (isStockValid) {
+      navigate.push("/checkout");
+    }
   };
 
   useEffect(() => {
@@ -266,8 +305,9 @@ export default function CartPage() {
                 className="w-full"
                 size="lg"
                 onClick={handleProceedToCheckout}
+                disabled={isLoadingProduct}
               >
-                Proceed to Checkout
+                {isLoadingProduct ? "Checking Stock..." : "Proceed to Checkout"}
               </Button>
 
               <Button
@@ -300,6 +340,34 @@ export default function CartPage() {
               className="bg-red-600 hover:bg-red-700"
             >
               Clear Cart
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Insufficient Stock Dialog */}
+      <AlertDialog open={showStockDialog} onOpenChange={setShowStockDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Stock Unavailable</AlertDialogTitle>
+            <AlertDialogDescription>
+              Some items in your cart have insufficient stock. We&apos;ve
+              adjusted the quantities to what&apos;s available.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="my-4 max-h-48 overflow-y-auto space-y-2">
+            {insufficientStockItems.map((item, index) => (
+              <div
+                key={index}
+                className="text-sm text-red-600 p-2 bg-red-50 rounded"
+              >
+                {item}
+              </div>
+            ))}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowStockDialog(false)}>
+              OK
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
