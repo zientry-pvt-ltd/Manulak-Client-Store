@@ -31,11 +31,19 @@ import { PAYMENT_METHOD_OPTIONS } from "@/lib/constants/orders";
 import { PaymentMethod } from "@/types/orders";
 import { toast } from "sonner";
 import BankDetails from "@/components/features/checkout/bank-details";
+import { useSanitizedInput } from "@/hooks/use-sanitized-input";
 
 export type FormFieldValues = z.infer<typeof onlineManualOrderSchema>;
 
 export default function CheckoutPage() {
   const { items: storedCartItems } = useAppSelector((state) => state.cart);
+
+  const { handleInput: handleNumbersInput } = useSanitizedInput({
+    type: "numbers-only",
+  });
+  const { handleInput: handleLettersInput } = useSanitizedInput({
+    type: "letters-only",
+  });
 
   const [createOrder, { isLoading: isCreatingOrder }] =
     useCreateOrderMutation();
@@ -93,7 +101,7 @@ export default function CheckoutPage() {
         address_line_1: "",
         address_line_2: "",
         address_line_3: "",
-        postal_code: 0,
+        postal_code: "",
         primary_phone_number: "",
         confirm_phone_number: "",
         status: "PENDING",
@@ -333,6 +341,7 @@ export default function CheckoutPage() {
                     <Input
                       id="firstName"
                       placeholder="John"
+                      onInput={handleLettersInput}
                       {...form.register("orderMetaData.first_name")}
                       className={
                         form.formState.errors.orderMetaData?.first_name
@@ -353,6 +362,7 @@ export default function CheckoutPage() {
                     <Input
                       id="lastName"
                       placeholder="Doe"
+                      onInput={handleLettersInput}
                       {...form.register("orderMetaData.last_name")}
                       className={
                         form.formState.errors.orderMetaData?.last_name
@@ -374,6 +384,7 @@ export default function CheckoutPage() {
                       id="phone"
                       type="tel"
                       placeholder="0771122345"
+                      onInput={handleNumbersInput}
                       {...form.register("orderMetaData.primary_phone_number")}
                       className={
                         form.formState.errors.orderMetaData
@@ -398,6 +409,7 @@ export default function CheckoutPage() {
                       id="confirmPhone"
                       type="tel"
                       placeholder="0771122345"
+                      onInput={handleNumbersInput}
                       {...form.register("orderMetaData.confirm_phone_number")}
                       onBlur={validatePhoneMatch}
                       className={
@@ -469,10 +481,15 @@ export default function CheckoutPage() {
                       <Input
                         id="postalCode"
                         placeholder="10001"
-                        type="number"
-                        {...form.register("orderMetaData.postal_code", {
-                          valueAsNumber: true,
-                        })}
+                        type="text"
+                        onInput={(e) => {
+                          const value = e.currentTarget.value.replace(
+                            /[^a-zA-Z0-9]/g,
+                            ""
+                          );
+                          e.currentTarget.value = value;
+                        }}
+                        {...form.register("orderMetaData.postal_code")}
                         className={
                           form.formState.errors.orderMetaData?.postal_code
                             ? "border-red-500"
@@ -594,6 +611,7 @@ export default function CheckoutPage() {
                         placeholder="1000"
                         type="number"
                         disabled={isCOD}
+                        onInput={handleNumbersInput}
                         {...form.register("paymentData.paid_amount", {
                           valueAsNumber: true,
                         })}
