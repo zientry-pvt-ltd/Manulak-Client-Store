@@ -99,17 +99,16 @@ export default function CheckoutPage() {
         status: "PENDING",
         payment_method: "COD",
       },
-      paymentData: {
-        payment_date: "",
-        paid_amount: 0,
-        payment_slip_number: "",
-      },
+      paymentData: undefined,
       orderItemsData: storedCartItems.map((item) => ({
         product_id: item.id,
         required_quantity: item.quantity,
       })),
     },
   });
+
+  const paymentMethod = form.watch("orderMetaData.payment_method");
+  const isCOD = paymentMethod === "COD";
 
   const handlePlaceOrder = async () => {
     setSubmitStatus({ type: null, message: "" });
@@ -172,10 +171,11 @@ export default function CheckoutPage() {
       const updatedData = {
         orderMetaData: updatedOrderMetaData,
         orderItemsData: orderItemsData,
-        paymentData: paymentData,
+        paymentData:
+          updatedOrderMetaData.payment_method === "COD"
+            ? undefined
+            : paymentData,
       };
-
-      console.log("Placing order with values:", updatedData);
 
       // Show processing toast
       toast.loading("Processing your order...", { id: "order-process" });
@@ -256,6 +256,17 @@ export default function CheckoutPage() {
       toast.error("Failed to calculate order value. Please try again.");
     }
   }, [error]);
+
+  // Clear payment fields when COD is selected
+  useEffect(() => {
+    if (isCOD) {
+      form.setValue("paymentData.payment_date", undefined);
+      form.setValue("paymentData.paid_amount", undefined);
+      form.setValue("paymentData.payment_slip_number", undefined);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLocalSlipFile(null);
+    }
+  }, [isCOD, form]);
 
   const getErrorMessage = (error: any) => {
     return error?.message || "";
@@ -526,11 +537,18 @@ export default function CheckoutPage() {
                       )}
                     </div>
                     <div>
-                      <Label htmlFor="paymentDate">Payment Date *</Label>
+                      <Label htmlFor="paymentDate">
+                        Payment Date {!isCOD && "*"}
+                      </Label>
                       <Input
                         id="paymentDate"
                         type="date"
-                        value={form.getValues("paymentData.payment_date").split("T")[0] || ""}
+                        disabled={isCOD}
+                        value={
+                          (
+                            form.getValues("paymentData.payment_date") ?? ""
+                          ).split("T")[0] || ""
+                        }
                         onChange={(e) => {
                           const utcString = new Date(
                             e.target.value
@@ -545,11 +563,11 @@ export default function CheckoutPage() {
                             }
                           );
                         }}
-                        className={
+                        className={`${
                           form.formState.errors.paymentData?.payment_date
                             ? "border-red-500"
                             : ""
-                        }
+                        } ${isCOD ? "bg-gray-100 cursor-not-allowed" : ""}`}
                       />
                       {form.formState.errors.paymentData?.payment_date && (
                         <p className="text-red-500 text-sm mt-1">
@@ -558,24 +576,32 @@ export default function CheckoutPage() {
                           )}
                         </p>
                       )}
+                      {isCOD && (
+                        <p className="text-gray-500 text-xs mt-1">
+                          Not required for Cash on Delivery
+                        </p>
+                      )}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="paidAmount">Paid Amount *</Label>
+                      <Label htmlFor="paidAmount">
+                        Paid Amount {!isCOD && "*"}
+                      </Label>
                       <Input
                         id="paidAmount"
                         placeholder="1000"
                         type="number"
+                        disabled={isCOD}
                         {...form.register("paymentData.paid_amount", {
                           valueAsNumber: true,
                         })}
-                        className={
+                        className={`${
                           form.formState.errors.paymentData?.paid_amount
                             ? "border-red-500"
                             : ""
-                        }
+                        } ${isCOD ? "bg-gray-100 cursor-not-allowed" : ""}`}
                       />
                       {form.formState.errors.paymentData?.paid_amount && (
                         <p className="text-red-500 text-sm mt-1">
@@ -584,21 +610,27 @@ export default function CheckoutPage() {
                           )}
                         </p>
                       )}
+                      {isCOD && (
+                        <p className="text-gray-500 text-xs mt-1">
+                          Not required for Cash on Delivery
+                        </p>
+                      )}
                     </div>
                     <div>
                       <Label htmlFor="paymentSlipNumber">
-                        Payment Slip Number *
+                        Payment Slip Number {!isCOD && "*"}
                       </Label>
                       <Input
                         id="paymentSlipNumber"
                         placeholder="12345"
                         maxLength={5}
+                        disabled={isCOD}
                         {...form.register("paymentData.payment_slip_number")}
-                        className={
+                        className={`${
                           form.formState.errors.paymentData?.payment_slip_number
                             ? "border-red-500"
                             : ""
-                        }
+                        } ${isCOD ? "bg-gray-100 cursor-not-allowed" : ""}`}
                       />
                       {form.formState.errors.paymentData
                         ?.payment_slip_number && (
@@ -609,58 +641,68 @@ export default function CheckoutPage() {
                           )}
                         </p>
                       )}
+                      {isCOD && (
+                        <p className="text-gray-500 text-xs mt-1">
+                          Not required for Cash on Delivery
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Upload Payment Slip */}
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">
-                  Upload Payment Slip
-                </h2>
-                <div>
-                  <input
-                    type="file"
-                    accept="image/*,application/pdf"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        // Validate file size (max 5MB)
-                        if (file.size > 5 * 1024 * 1024) {
-                          const errorMsg = "File size must be less than 5MB";
-                          setSubmitStatus({ type: "error", message: errorMsg });
-                          toast.error(errorMsg);
-                          return;
+              {!isCOD && (
+                <div className="bg-white rounded-lg p-6 shadow-sm">
+                  <h2 className="text-xl font-semibold mb-4">
+                    Upload Payment Slip
+                  </h2>
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          // Validate file size (max 5MB)
+                          if (file.size > 5 * 1024 * 1024) {
+                            const errorMsg = "File size must be less than 5MB";
+                            setSubmitStatus({
+                              type: "error",
+                              message: errorMsg,
+                            });
+                            toast.error(errorMsg);
+                            return;
+                          }
+                          setLocalSlipFile(file);
+                          setSubmitStatus({ type: null, message: "" });
+                          toast.success(
+                            `File "${file.name}" selected successfully`
+                          );
                         }
-                        setLocalSlipFile(file);
-                        setSubmitStatus({ type: null, message: "" });
-                        toast.success(
-                          `File "${file.name}" selected successfully`
-                        );
-                      }
-                    }}
-                    className="block w-full text-sm text-gray-500
-                      file:mr-4 file:py-2 file:px-4
-                      file:rounded-md file:border-0
-                      file:text-sm file:font-semibold
-                      file:bg-primary file:text-white
-                      hover:file:bg-primary/90
-                      cursor-pointer"
-                  />
-                  {localSlipFile && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <p className="text-sm text-gray-600">
-                        Selected: {localSlipFile.name}
-                      </p>
-                    </div>
-                  )}
-                  <p className="text-xs text-gray-500 mt-2">
-                    Accepted formats: JPG, PNG, PDF (Max 5MB)
-                  </p>
+                      }}
+                      className="block w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-md file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-primary file:text-white
+                        hover:file:bg-primary/90
+                        cursor-pointer"
+                    />
+                    {localSlipFile && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <p className="text-sm text-gray-600">
+                          Selected: {localSlipFile.name}
+                        </p>
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-500 mt-2">
+                      Accepted formats: JPG, PNG, PDF (Max 5MB)
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -668,6 +710,17 @@ export default function CheckoutPage() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg p-6 shadow-sm sticky top-20">
               <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+
+              {/* COD Notice */}
+              {isCOD && (
+                <Alert className="mb-4 border-blue-500 bg-blue-50">
+                  <AlertCircle className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-blue-800 text-sm">
+                    Payment details are not required for Cash on Delivery
+                    orders.
+                  </AlertDescription>
+                </Alert>
+              )}
 
               {/* Cart Items */}
               <div className="space-y-4 mb-4 max-h-64 overflow-y-auto">
