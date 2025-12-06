@@ -1,5 +1,5 @@
 import type { Product } from "@/types/product";
-import { ApiResourceList } from "@/types/common";
+import { ApiResource, ApiResourceList } from "@/types/common";
 import { api } from "./api";
 
 export const productsApi = api.injectEndpoints({
@@ -15,12 +15,17 @@ export const productsApi = api.injectEndpoints({
         },
       }),
     }),
-    getProductById: builder.query<Product, string>({
+    getProductById: builder.query<ApiResource<Product>, string>({
       query: (productId) => ({
-        url: `/product/get-product/${productId}`,
+        url: `/product/get-product-by-id/${productId}`,
         method: "GET",
       }),
+      keepUnusedDataFor: 0,
     }),
   }),
 });
-export const { useGetProductsQuery, useGetProductByIdQuery } = productsApi;
+export const {
+  useGetProductsQuery,
+  useGetProductByIdQuery,
+  useLazyGetProductByIdQuery,
+} = productsApi;

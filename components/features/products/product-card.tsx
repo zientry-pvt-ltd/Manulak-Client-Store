@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { Product } from "@/types/product";
 import { addToCart } from "@/lib/store/slices/cart-slice";
 import { addToWishlist } from "@/lib/store/slices/wishlist-slice";
+import { toast } from "sonner";
 
 interface ProductCardProps {
   product: Product;
@@ -47,7 +48,7 @@ export function ProductCard({ product }: ProductCardProps) {
         image: product.product_image_urls[0],
       })
     );
-    alert(`${product.product_name} added to cart!`);
+    toast.success(`${product.product_name} added to cart!`);
   };
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
