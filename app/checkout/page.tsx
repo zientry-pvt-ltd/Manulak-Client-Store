@@ -32,6 +32,7 @@ import { PaymentMethod } from "@/types/orders";
 import { toast } from "sonner";
 import BankDetails from "@/components/features/checkout/bank-details";
 import { useSanitizedInput } from "@/hooks/use-sanitized-input";
+import { SuccessDialog } from "@/components/features/checkout/success-dialog";
 
 export type FormFieldValues = z.infer<typeof onlineManualOrderSchema>;
 
@@ -57,6 +58,8 @@ export default function CheckoutPage() {
 
   const calculationSummary = data?.data;
 
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [localSlipFile, setLocalSlipFile] = useState<File | null>(null);
   const [submitStatus, setSubmitStatus] = useState<{
     type: "success" | "error" | null;
@@ -194,8 +197,9 @@ export default function CheckoutPage() {
       // Create the order
       const order = await createOrder(updatedData).unwrap();
 
+      console.log(order);
+
       toast.success("Order created successfully!", { id: "order-process" });
-      console.log("Order created:", order);
 
       // Upload payment slip if provided
       if (localSlipFile) {
@@ -224,7 +228,9 @@ export default function CheckoutPage() {
       const successMsg =
         "Order placed successfully! You will receive a confirmation shortly.";
       setSubmitStatus({ type: "success", message: successMsg });
-      toast.success(successMsg);
+
+      setOrderId(order.data.order_id);
+      setShowSuccessDialog(true);
 
       // Reset form after successful submission
       setTimeout(() => {
@@ -823,10 +829,7 @@ export default function CheckoutPage() {
                 disabled={isSubmitting || storedCartItems.length === 0}
               >
                 {isSubmitting ? (
-                  <span className="flex items-center gap-2">
-                    <span className="animate-spin">⏳</span>
-                    Processing...
-                  </span>
+                  <span className="flex items-center gap-2">Processing...</span>
                 ) : (
                   "Place Order"
                 )}
@@ -839,6 +842,12 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      <SuccessDialog
+        orderId={orderId}
+        open={showSuccessDialog}
+        onOpenChange={setShowSuccessDialog}
+      />
     </div>
   );
 }
