@@ -23,3 +23,17 @@ interface ResponseDTO<T> extends BaseResponse {
 export type ApiResourceList<T> = ListResponseDTO<T>;
 
 export type ApiResource<T> = ResponseDTO<T>;
+
+export type InputSanitizerType =
+  | "numbers-only"
+  | "letters-only"
+  | "alphanumeric"
+  | "phone"
+  | "email"
+  | "no-special-chars";
+
+export interface SanitizerConfig {
+  type: InputSanitizerType;
+  maxLength?: number;
+  pattern?: RegExp;
+}

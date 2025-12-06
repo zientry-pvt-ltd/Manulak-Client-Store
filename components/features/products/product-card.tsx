@@ -16,7 +16,10 @@ import { Heart, Eye, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Product } from "@/types/product";
 import { addToCart } from "@/lib/store/slices/cart-slice";
-import { addToWishlist } from "@/lib/store/slices/wishlist-slice";
+import {
+  addToWishlist,
+  removeFromWishlist,
+} from "@/lib/store/slices/wishlist-slice";
 import { toast } from "sonner";
 import dummyThumbnail from "@/public/assets/dummy-thumbnail.jpg";
 
@@ -54,15 +57,19 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
     e.stopPropagation();
-    dispatch(
-      addToWishlist({
-        id: product.id,
-        name: product.product_name,
-        price: product.selling_price,
-        stock: product.quantity,
-        image: product.product_image_urls[0],
-      })
-    );
+    if (isInWishlist) {
+      dispatch(removeFromWishlist(product.id));
+    } else {
+      dispatch(
+        addToWishlist({
+          id: product.id,
+          name: product.product_name,
+          price: product.selling_price,
+          stock: product.quantity,
+          image: product.product_image_urls[0],
+        })
+      );
+    }
   };
 
   const handleViewDetails = (e: React.MouseEvent) => {
@@ -210,7 +217,10 @@ export function ProductCard({ product }: ProductCardProps) {
               {/* Main Image */}
               <div className="relative flex-1 h-96 rounded-lg overflow-hidden bg-gray-100 order-1">
                 <Image
-                  src={product.product_image_urls[selectedImageIndex] || dummyThumbnail}
+                  src={
+                    product.product_image_urls[selectedImageIndex] ||
+                    dummyThumbnail
+                  }
                   alt={product.product_name}
                   fill
                   className="object-cover transition-opacity duration-300"
