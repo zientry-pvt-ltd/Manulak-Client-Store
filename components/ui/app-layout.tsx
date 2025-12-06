@@ -22,11 +22,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {/* Content */}
           <main className="pt-16">
             <Image
-              src={"/assets/top.png"}
+              src={"/assets/bannerv3.png"}
               width={1600}
               height={100}
               alt="Top Image"
-              className="max-h-24 min-h-16 object-cover w-full"
+              className="max-h-96 object-cover"
               loading="eager"
             />
             {children}
