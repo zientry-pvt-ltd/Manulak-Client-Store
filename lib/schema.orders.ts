@@ -21,7 +21,7 @@ export const orderMetaDataSchema = z.object({
   address_line_1: z.string().min(1, "Address line 1 is required"),
   address_line_2: z.string().optional(),
   address_line_3: z.string().optional(),
-  postal_code: z.string().min(1, "Postal code is required"),
+  postal_code: z.string().optional(),
   primary_phone_number: z.string().min(10, "Primary phone number is required"),
   confirm_phone_number: z.string().min(10, "Confirm phone number is required"),
   status: OrderStatusSchema,

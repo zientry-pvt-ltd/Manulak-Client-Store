@@ -44,6 +44,9 @@ export default function CheckoutPage() {
   const { handleInput: handleLettersInput } = useSanitizedInput({
     type: "letters-only",
   });
+  const { handleInput: handleAlphanumericInput } = useSanitizedInput({
+    type: "alphanumeric",
+  });
 
   const [createOrder, { isLoading: isCreatingOrder }] =
     useCreateOrderMutation();
@@ -477,18 +480,12 @@ export default function CheckoutPage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="postalCode">Postal Code *</Label>
+                      <Label htmlFor="postalCode">Postal Code</Label>
                       <Input
                         id="postalCode"
                         placeholder="10001"
                         type="text"
-                        onInput={(e) => {
-                          const value = e.currentTarget.value.replace(
-                            /[^a-zA-Z0-9]/g,
-                            ""
-                          );
-                          e.currentTarget.value = value;
-                        }}
+                        onInput={handleAlphanumericInput}
                         {...form.register("orderMetaData.postal_code")}
                         className={
                           form.formState.errors.orderMetaData?.postal_code
