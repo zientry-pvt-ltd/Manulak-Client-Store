@@ -4,13 +4,25 @@ import { api } from "./api";
 
 export const productsApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getProducts: builder.query<ApiResourceList<Product>, number>({
-      query: (pageNo) => ({
+    getProducts: builder.query<
+      ApiResourceList<Product>,
+      {
+        paging: {
+          pageNo: number;
+          pageSize: number;
+        };
+        filters: {
+          query_attribute: string;
+          query: string;
+        }[];
+      }
+    >({
+      query: ({ paging, filters }) => ({
         url: "/product/get-all-products",
         method: "POST",
         body: {
-          paging: { pageNo: pageNo, pageSize: 6 },
-          filters: [],
+          paging: paging,
+          filters: filters,
           sorting: { columnName: "created_at", order: -1 },
         },
       }),
@@ -28,4 +40,5 @@ export const {
   useGetProductsQuery,
   useGetProductByIdQuery,
   useLazyGetProductByIdQuery,
+  useLazyGetProductsQuery
 } = productsApi;

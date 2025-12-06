@@ -12,7 +12,7 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 
-import { Home, Search, Heart, ShoppingCart, Package } from "lucide-react";
+import { Home, Heart, ShoppingCart, Package } from "lucide-react";
 
 export function MobileSidebar() {
   return (
@@ -29,16 +29,6 @@ export function MobileSidebar() {
                   <Link href="/">
                     <Home className="h-4 w-4" />
                     <span>Home</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              {/* Search */}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link href="/">
-                    <Search className="h-4 w-4" />
-                    <span>Search Products</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

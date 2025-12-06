@@ -16,13 +16,28 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { useAppSelector } from "@/lib/store/hooks";
 
 export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [priceRange, setPriceRange] = useState<string>("All");
   const [pageNo, setPageNo] = useState<number>(1);
+  const searchParams = useAppSelector((state) => state.app.searchQuery);
 
-  const { data: products, isLoading } = useGetProductsQuery(pageNo);
+  const { data: products, isFetching: isLoading } = useGetProductsQuery({
+    paging: {
+      pageNo,
+      pageSize: 6,
+    },
+    filters: searchParams
+      ? [
+          {
+            query_attribute: "product_name",
+            query: searchParams || "",
+          },
+        ]
+      : [],
+  });
 
   const categories = useMemo(() => {
     const cats = Array.from(
