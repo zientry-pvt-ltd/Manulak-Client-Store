@@ -32,6 +32,7 @@ import { PaymentMethod } from "@/types/orders";
 import { toast } from "sonner";
 import BankDetails from "@/components/features/checkout/bank-details";
 import { useSanitizedInput } from "@/hooks/use-sanitized-input";
+import { SuccessDialog } from "@/components/features/checkout/success-dialog";
 
 export type FormFieldValues = z.infer<typeof onlineManualOrderSchema>;
 
@@ -44,6 +45,9 @@ export default function CheckoutPage() {
   const { handleInput: handleLettersInput } = useSanitizedInput({
     type: "letters-only",
   });
+  const { handleInput: handleAlphanumericInput } = useSanitizedInput({
+    type: "alphanumeric",
+  });
 
   const [createOrder, { isLoading: isCreatingOrder }] =
     useCreateOrderMutation();
@@ -54,6 +58,8 @@ export default function CheckoutPage() {
 
   const calculationSummary = data?.data;
 
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [localSlipFile, setLocalSlipFile] = useState<File | null>(null);
   const [submitStatus, setSubmitStatus] = useState<{
     type: "success" | "error" | null;
@@ -191,8 +197,9 @@ export default function CheckoutPage() {
       // Create the order
       const order = await createOrder(updatedData).unwrap();
 
+      console.log(order);
+
       toast.success("Order created successfully!", { id: "order-process" });
-      console.log("Order created:", order);
 
       // Upload payment slip if provided
       if (localSlipFile) {
@@ -221,7 +228,9 @@ export default function CheckoutPage() {
       const successMsg =
         "Order placed successfully! You will receive a confirmation shortly.";
       setSubmitStatus({ type: "success", message: successMsg });
-      toast.success(successMsg);
+
+      setOrderId(order.data.order_id);
+      setShowSuccessDialog(true);
 
       // Reset form after successful submission
       setTimeout(() => {
@@ -477,18 +486,12 @@ export default function CheckoutPage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="postalCode">Postal Code *</Label>
+                      <Label htmlFor="postalCode">Postal Code</Label>
                       <Input
                         id="postalCode"
                         placeholder="10001"
                         type="text"
-                        onInput={(e) => {
-                          const value = e.currentTarget.value.replace(
-                            /[^a-zA-Z0-9]/g,
-                            ""
-                          );
-                          e.currentTarget.value = value;
-                        }}
+                        onInput={handleAlphanumericInput}
                         {...form.register("orderMetaData.postal_code")}
                         className={
                           form.formState.errors.orderMetaData?.postal_code
@@ -826,10 +829,7 @@ export default function CheckoutPage() {
                 disabled={isSubmitting || storedCartItems.length === 0}
               >
                 {isSubmitting ? (
-                  <span className="flex items-center gap-2">
-                    <span className="animate-spin">⏳</span>
-                    Processing...
-                  </span>
+                  <span className="flex items-center gap-2">Processing...</span>
                 ) : (
                   "Place Order"
                 )}
@@ -842,6 +842,12 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      <SuccessDialog
+        orderId={orderId}
+        open={showSuccessDialog}
+        onOpenChange={setShowSuccessDialog}
+      />
     </div>
   );
 }
