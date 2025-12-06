@@ -26,7 +26,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               width={1600}
               height={100}
               alt="Top Image"
-              className="max-h-96 object-cover"
+              className="max-h-96 object-cover w-full"
               loading="eager"
             />
             {children}
