@@ -242,7 +242,9 @@ export function ProductCard({ product }: ProductCardProps) {
 
               <div>
                 <h4 className="font-semibold mb-2">Description</h4>
-                <p className="text-gray-600">{product.product_desc}</p>
+                <div className="text-gray-600 whitespace-pre-line">
+                  {product.product_desc}
+                </div>
               </div>
 
               <div>
