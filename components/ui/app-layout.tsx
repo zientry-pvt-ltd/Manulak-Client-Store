@@ -22,7 +22,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {/* Content */}
           <main className="pt-16">
             <Image
-              src={"/assets/bannerv3.png"}
+              src={"/assets/banner.png"}
               width={1600}
               height={100}
               alt="Top Image"

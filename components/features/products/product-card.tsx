@@ -18,6 +18,7 @@ import { Product } from "@/types/product";
 import { addToCart } from "@/lib/store/slices/cart-slice";
 import { addToWishlist } from "@/lib/store/slices/wishlist-slice";
 import { toast } from "sonner";
+import dummyThumbnail from "@/public/assets/dummy-thumbnail.jpg";
 
 interface ProductCardProps {
   product: Product;
@@ -84,7 +85,7 @@ export function ProductCard({ product }: ProductCardProps) {
         {/* Image Container */}
         <div className="relative h-64 overflow-hidden bg-gray-100">
           <Image
-            src={product.product_image_urls[0]}
+            src={product.product_image_urls[0] || dummyThumbnail}
             alt={product.product_name}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-110"
@@ -196,7 +197,7 @@ export function ProductCard({ product }: ProductCardProps) {
                       )}
                     >
                       <Image
-                        src={img}
+                        src={img || dummyThumbnail}
                         alt={`${product.product_name} view ${index + 1}`}
                         fill
                         className="object-cover"
@@ -209,7 +210,7 @@ export function ProductCard({ product }: ProductCardProps) {
               {/* Main Image */}
               <div className="relative flex-1 h-96 rounded-lg overflow-hidden bg-gray-100 order-1">
                 <Image
-                  src={product.product_image_urls[selectedImageIndex]}
+                  src={product.product_image_urls[selectedImageIndex] || dummyThumbnail}
                   alt={product.product_name}
                   fill
                   className="object-cover transition-opacity duration-300"

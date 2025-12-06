@@ -82,7 +82,7 @@ export const AppNavBar = () => {
       </div>
 
       {/* RIGHT — ICONS & ORDER STATUS */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         {/* Mobile Search Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild onClick={() => setIsDialogOpen(true)}>
