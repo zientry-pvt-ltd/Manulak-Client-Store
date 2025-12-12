@@ -31,6 +31,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useCalculateOrderValueMutation } from "@/lib/store/services/orders-api";
 import { useLazyGetProductByIdQuery } from "@/lib/store/services/products-api";
+import dummyThumbnail from "@/public/assets/dummy-thumbnail.jpg";
 
 export default function CartPage() {
   const [showClearDialog, setShowClearDialog] = useState(false);
@@ -170,7 +171,7 @@ export default function CartPage() {
                 {/* Product Image */}
                 <div className="relative w-24 h-24 shrink-0 rounded-md overflow-hidden bg-gray-100">
                   <Image
-                    src={item.image}
+                    src={item.image || dummyThumbnail}
                     alt={item.name}
                     fill
                     className="object-cover"
@@ -201,9 +202,7 @@ export default function CartPage() {
                     </Button>
 
                     <Input
-                      type="number"
                       min="1"
-                      max="99"
                       value={item.quantity}
                       onChange={(e) =>
                         handleUpdateQuantity(
@@ -212,6 +211,10 @@ export default function CartPage() {
                         )
                       }
                       className="w-20 h-8 text-center"
+                      onInput={(e) => {
+                        const el = e.currentTarget as HTMLInputElement;
+                        el.value = el.value.replace(/\D+/g, "");
+                      }}
                     />
 
                     <Button

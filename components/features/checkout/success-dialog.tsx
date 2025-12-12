@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 export function SuccessDialog({
   orderId,
@@ -20,6 +21,15 @@ export function SuccessDialog({
   open: boolean;
   onOpenChange: (val: boolean) => void;
 }) {
+  const copyToClipboard = () => {
+    if (!orderId) return;
+    try {
+      navigator.clipboard.writeText(orderId);
+      toast.success("Order ID copied to clipboard");
+    } catch (error) {
+      console.error("Failed to copy order ID to clipboard:", error);
+    }
+  };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[450px]">
@@ -38,13 +48,11 @@ export function SuccessDialog({
             <p className="font-semibold text-green-900">Order ID</p>
 
             <div className="flex items-center justify-between bg-white border border-green-200 rounded-md px-3 py-2">
-              <span className="font-mono text-green-800 wrap-anywhere">{orderId}</span>
+              <span className="font-mono text-green-800 wrap-anywhere">
+                {orderId}
+              </span>
 
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => navigator.clipboard.writeText(orderId)}
-              >
+              <Button size="sm" variant="outline" onClick={copyToClipboard}>
                 Copy
               </Button>
             </div>
