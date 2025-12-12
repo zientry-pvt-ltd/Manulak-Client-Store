@@ -33,6 +33,8 @@ import { toast } from "sonner";
 import BankDetails from "@/components/features/checkout/bank-details";
 import { useSanitizedInput } from "@/hooks/use-sanitized-input";
 import { SuccessDialog } from "@/components/features/checkout/success-dialog";
+import dummyThumbnail from "@/public/assets/dummy-thumbnail.jpg";
+import AppDateInput from "@/components/ui/app-date-input";
 
 export type FormFieldValues = z.infer<typeof onlineManualOrderSchema>;
 
@@ -560,23 +562,19 @@ export default function CheckoutPage() {
                       <Label htmlFor="paymentDate">
                         Payment Date {!isCOD && "*"}
                       </Label>
-                      <Input
+                      <AppDateInput
                         id="paymentDate"
-                        type="date"
+                        size="sm"
                         disabled={isCOD}
-                        value={
-                          (
-                            form.getValues("paymentData.payment_date") ?? ""
-                          ).split("T")[0] || ""
-                        }
-                        onChange={(e) => {
-                          const utcString = new Date(
-                            e.target.value
-                          ).toISOString();
-
+                        hiddenDates={{
+                          futureDates: true,
+                        }}
+                        fullWidth
+                        value={form.getValues("paymentData.payment_date")}
+                        onChange={(value) => {
                           form.setValue(
                             "paymentData.payment_date",
-                            utcString || "",
+                            value || "",
                             {
                               shouldValidate: true,
                               shouldDirty: true,
@@ -589,6 +587,7 @@ export default function CheckoutPage() {
                             : ""
                         } ${isCOD ? "bg-gray-100 cursor-not-allowed" : ""}`}
                       />
+
                       {form.formState.errors.paymentData?.payment_date && (
                         <p className="text-red-500 text-sm mt-1">
                           {getErrorMessage(
@@ -639,7 +638,7 @@ export default function CheckoutPage() {
                     </div>
                     <div>
                       <Label htmlFor="paymentSlipNumber">
-                        Payment Slip Number {!isCOD && "*"}
+                        Payment Slip Number
                       </Label>
                       <Input
                         id="paymentSlipNumber"
@@ -749,7 +748,7 @@ export default function CheckoutPage() {
                   <div key={item.id} className="flex gap-3">
                     <div className="relative w-16 h-16 shrink-0 rounded-md overflow-hidden bg-gray-100">
                       <Image
-                        src={item.image}
+                        src={item.image || dummyThumbnail}
                         alt={item.name}
                         fill
                         className="object-cover"
