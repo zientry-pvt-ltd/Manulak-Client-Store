@@ -1,3 +1,4 @@
+import { COMPANY_INFO } from "@/lib/constants/other";
 import { Facebook, Youtube, Mail, MapPin } from "lucide-react";
 
 export function AppFooter() {
@@ -12,7 +13,7 @@ export function AppFooter() {
               <h3 className="text-lg font-semibold">Facebook</h3>
             </div>
             <a
-              href="https://facebook.com"
+              href={COMPANY_INFO.FACEBOOK_PAGE}
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-300 hover:text-blue-400 transition-colors"
@@ -20,7 +21,6 @@ export function AppFooter() {
               Follow us on Facebook
             </a>
           </div>
-
           {/* YouTube */}
           <div className="flex flex-col items-center md:items-start">
             <div className="flex items-center gap-3 mb-3">
@@ -28,7 +28,7 @@ export function AppFooter() {
               <h3 className="text-lg font-semibold">YouTube</h3>
             </div>
             <a
-              href="https://youtube.com"
+              href={COMPANY_INFO.YOUTUBE_CHANNEL}
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-300 hover:text-red-400 transition-colors"
@@ -36,7 +36,6 @@ export function AppFooter() {
               Subscribe to our channel
             </a>
           </div>
-
           {/* Email */}
           <div className="flex flex-col items-center md:items-start">
             <div className="flex items-center gap-3 mb-3">
@@ -50,7 +49,6 @@ export function AppFooter() {
               info@example.com
             </a>
           </div>
-
           {/* Location */}
           <div className="flex flex-col items-center md:items-start">
             <div className="flex items-center gap-3 mb-3">
