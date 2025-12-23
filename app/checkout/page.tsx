@@ -35,6 +35,7 @@ import { useSanitizedInput } from "@/hooks/use-sanitized-input";
 import { SuccessDialog } from "@/components/features/checkout/success-dialog";
 import dummyThumbnail from "@/public/assets/dummy-thumbnail.jpg";
 import AppDateInput from "@/components/ui/app-date-input";
+import { formatLKR } from "@/lib/utils";
 
 export type FormFieldValues = z.infer<typeof onlineManualOrderSchema>;
 
@@ -762,7 +763,10 @@ export default function CheckoutPage() {
                         Qty: {item.quantity}
                       </p>
                       <p className="text-sm font-semibold text-primary">
-                        Rs:{(item.price * item.quantity).toFixed(2)}
+                        Rs:
+                        {formatLKR(item.price * item.quantity, {
+                          withSymbol: false,
+                        })}
                       </p>
                     </div>
                   </div>
@@ -795,7 +799,10 @@ export default function CheckoutPage() {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Subtotal</span>
                     <span className="font-medium">
-                      Rs:{calculationSummary.itemsValue.toFixed(2)}
+                      Rs:
+                      {formatLKR(calculationSummary.itemsValue, {
+                        withSymbol: false,
+                      })}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
@@ -804,7 +811,9 @@ export default function CheckoutPage() {
                       {calculationSummary.courierValue === 0 ? (
                         <span className="text-green-600">FREE</span>
                       ) : (
-                        `Rs:${calculationSummary.courierValue.toFixed(2)}`
+                        `Rs:${formatLKR(calculationSummary.courierValue, {
+                          withSymbol: false,
+                        })}`
                       )}
                     </span>
                   </div>
@@ -814,7 +823,10 @@ export default function CheckoutPage() {
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total</span>
                     <span className="text-primary">
-                      Rs:{calculationSummary.totalValue.toFixed(2)}
+                      Rs:
+                      {formatLKR(calculationSummary.totalValue, {
+                        withSymbol: false,
+                      })}
                     </span>
                   </div>
                 </div>
