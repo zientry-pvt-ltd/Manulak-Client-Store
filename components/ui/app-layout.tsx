@@ -21,14 +21,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
           {/* Content */}
           <main className="pt-16">
-            <Image
-              src={"/assets/banner.png"}
-              width={1600}
-              height={100}
-              alt="Top Image"
-              className="max-h-96 object-cover w-full"
-              loading="eager"
-            />
+            <div className="w-full bg-[#1A5C15]">
+              <Image
+                src={"/assets/banner.png"}
+                width={1600}
+                height={100}
+                alt="Top Image"
+                className="max-h-[400px] object-cover w-full max-w-[1500px] mx-auto"
+                loading="eager"
+              />
+            </div>
             {children}
           </main>
         </div>

@@ -32,6 +32,7 @@ import { useRouter } from "next/navigation";
 import { useCalculateOrderValueMutation } from "@/lib/store/services/orders-api";
 import { useLazyGetProductByIdQuery } from "@/lib/store/services/products-api";
 import dummyThumbnail from "@/public/assets/dummy-thumbnail.jpg";
+import { formatLKR } from "@/lib/utils";
 
 export default function CartPage() {
   const [showClearDialog, setShowClearDialog] = useState(false);
@@ -166,7 +167,7 @@ export default function CartPage() {
             {storedCartItems.map((item) => (
               <div
                 key={item.id}
-                className="flex gap-4 p-4 border rounded-lg bg-white transition-shadow"
+                className="flex gap-2 p-2 md:p-4 border rounded-lg bg-white transition-shadow"
               >
                 {/* Product Image */}
                 <div className="relative w-24 h-24 shrink-0 rounded-md overflow-hidden bg-gray-100">
@@ -184,15 +185,15 @@ export default function CartPage() {
                     {item.name}
                   </h3>
                   <p className="text-xl font-bold text-primary mb-3">
-                    Rs:{item.price.toFixed(2)}
+                    Rs:{formatLKR(item.price, { withSymbol: false })}
                   </p>
 
                   {/* Quantity Controls */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-8 w-8 hidden md:flex"
                       onClick={() =>
                         handleUpdateQuantity(item.id, item.quantity - 1)
                       }
@@ -210,7 +211,7 @@ export default function CartPage() {
                           parseInt(e.target.value) || 1
                         )
                       }
-                      className="w-20 h-8 text-center"
+                      className="w-20 h-8 text-center p-0"
                       onInput={(e) => {
                         const el = e.currentTarget as HTMLInputElement;
                         el.value = el.value.replace(/\D+/g, "");
@@ -220,17 +221,19 @@ export default function CartPage() {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-8 w-8 hidden md:flex"
                       onClick={() =>
                         handleUpdateQuantity(item.id, item.quantity + 1)
                       }
-                      disabled={item.quantity >= 99}
                     >
                       <Plus className="h-3 w-3" />
                     </Button>
 
                     <span className="text-sm text-gray-500 ml-2">
-                      = Rs:{(item.price * item.quantity).toFixed(2)}
+                      Rs:
+                      {formatLKR(item.price * item.quantity, {
+                        withSymbol: false,
+                      })}
                     </span>
                   </div>
                 </div>
@@ -277,7 +280,10 @@ export default function CartPage() {
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
                   <span className="font-medium">
-                    Rs:{calculationSummary.itemsValue.toFixed(2)}
+                    Rs:
+                    {formatLKR(calculationSummary.itemsValue, {
+                      withSymbol: false,
+                    })}
                   </span>
                 </div>
 
@@ -287,7 +293,9 @@ export default function CartPage() {
                     {calculationSummary.courierValue === 0 ? (
                       <span className="text-green-600">FREE</span>
                     ) : (
-                      `RS:${calculationSummary.courierValue.toFixed(2)}`
+                      `RS:${formatLKR(calculationSummary.courierValue, {
+                        withSymbol: false,
+                      })}`
                     )}
                   </span>
                 </div>
@@ -296,7 +304,10 @@ export default function CartPage() {
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total</span>
                     <span className="text-primary">
-                      Rs:{calculationSummary.totalValue.toFixed(2)}
+                      Rs:
+                      {formatLKR(calculationSummary.totalValue, {
+                        withSymbol: false,
+                      })}
                     </span>
                   </div>
                 </div>

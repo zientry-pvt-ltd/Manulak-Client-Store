@@ -33,3 +33,25 @@ export const createInputSanitizer = (config: SanitizerConfig) => {
     return sanitized;
   };
 };
+
+export const formatLKR = (
+  amount: number,
+  options?: {
+    withSymbol?: boolean;
+    minimumFractionDigits?: number;
+    maximumFractionDigits?: number;
+  }
+): string => {
+  const {
+    withSymbol = true,
+    minimumFractionDigits = 2,
+    maximumFractionDigits = 2,
+  } = options || {};
+
+  return new Intl.NumberFormat("en-LK", {
+    style: withSymbol ? "currency" : "decimal",
+    currency: "LKR",
+    minimumFractionDigits,
+    maximumFractionDigits,
+  }).format(amount);
+};

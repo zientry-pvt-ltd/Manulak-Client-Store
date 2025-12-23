@@ -35,6 +35,7 @@ import { useSanitizedInput } from "@/hooks/use-sanitized-input";
 import { SuccessDialog } from "@/components/features/checkout/success-dialog";
 import dummyThumbnail from "@/public/assets/dummy-thumbnail.jpg";
 import AppDateInput from "@/components/ui/app-date-input";
+import { formatLKR } from "@/lib/utils";
 
 export type FormFieldValues = z.infer<typeof onlineManualOrderSchema>;
 
@@ -198,8 +199,6 @@ export default function CheckoutPage() {
 
       // Create the order
       const order = await createOrder(updatedData).unwrap();
-
-      console.log(order);
 
       toast.success("Order created successfully!", { id: "order-process" });
 
@@ -436,6 +435,110 @@ export default function CheckoutPage() {
                         {getErrorMessage(
                           form.formState.errors.orderMetaData
                             .confirm_phone_number
+                        )}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="alterPhone1">Alter Phone 1</Label>
+                    <Input
+                      id="alterPhone1"
+                      type="text"
+                      placeholder="Alter Phone 1"
+                      onInput={handleLettersInput}
+                      {...form.register(
+                        "orderMetaData.alternate_phone_number_1"
+                      )}
+                      onBlur={validatePhoneMatch}
+                      className={
+                        form.formState.errors.orderMetaData
+                          ?.alternate_phone_number_1
+                          ? "border-red-500"
+                          : ""
+                      }
+                    />
+                    {form.formState.errors.orderMetaData
+                      ?.alternate_phone_number_1 && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {getErrorMessage(
+                          form.formState.errors.orderMetaData
+                            .alternate_phone_number_1
+                        )}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="alterPhone2">Alter Phone 2</Label>
+                    <Input
+                      id="alterPhone2"
+                      type="text"
+                      placeholder="Alter Phone 2"
+                      onInput={handleLettersInput}
+                      {...form.register(
+                        "orderMetaData.alternate_phone_number_2"
+                      )}
+                      onBlur={validatePhoneMatch}
+                      className={
+                        form.formState.errors.orderMetaData
+                          ?.alternate_phone_number_2
+                          ? "border-red-500"
+                          : ""
+                      }
+                    />
+                    {form.formState.errors.orderMetaData
+                      ?.alternate_phone_number_2 && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {getErrorMessage(
+                          form.formState.errors.orderMetaData
+                            .alternate_phone_number_2
+                        )}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="companyName">Company Name</Label>
+                    <Input
+                      id="companyName"
+                      type="text"
+                      placeholder="Company Name"
+                      onInput={handleLettersInput}
+                      {...form.register("orderMetaData.company_name")}
+                      onBlur={validatePhoneMatch}
+                      className={
+                        form.formState.errors.orderMetaData?.company_name
+                          ? "border-red-500"
+                          : ""
+                      }
+                    />
+                    {form.formState.errors.orderMetaData?.company_name && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {getErrorMessage(
+                          form.formState.errors.orderMetaData.company_name
+                        )}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Company Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="email@example.com"
+                      onInput={handleNumbersInput}
+                      {...form.register("orderMetaData.email")}
+                      onBlur={validatePhoneMatch}
+                      className={
+                        form.formState.errors.orderMetaData?.email
+                          ? "border-red-500"
+                          : ""
+                      }
+                    />
+                    {form.formState.errors.orderMetaData?.email && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {getErrorMessage(
+                          form.formState.errors.orderMetaData.email
                         )}
                       </p>
                     )}
@@ -762,7 +865,10 @@ export default function CheckoutPage() {
                         Qty: {item.quantity}
                       </p>
                       <p className="text-sm font-semibold text-primary">
-                        Rs:{(item.price * item.quantity).toFixed(2)}
+                        Rs:
+                        {formatLKR(item.price * item.quantity, {
+                          withSymbol: false,
+                        })}
                       </p>
                     </div>
                   </div>
@@ -795,7 +901,10 @@ export default function CheckoutPage() {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Subtotal</span>
                     <span className="font-medium">
-                      Rs:{calculationSummary.itemsValue.toFixed(2)}
+                      Rs:
+                      {formatLKR(calculationSummary.itemsValue, {
+                        withSymbol: false,
+                      })}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
@@ -804,7 +913,9 @@ export default function CheckoutPage() {
                       {calculationSummary.courierValue === 0 ? (
                         <span className="text-green-600">FREE</span>
                       ) : (
-                        `Rs:${calculationSummary.courierValue.toFixed(2)}`
+                        `Rs:${formatLKR(calculationSummary.courierValue, {
+                          withSymbol: false,
+                        })}`
                       )}
                     </span>
                   </div>
@@ -814,7 +925,10 @@ export default function CheckoutPage() {
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total</span>
                     <span className="text-primary">
-                      Rs:{calculationSummary.totalValue.toFixed(2)}
+                      Rs:
+                      {formatLKR(calculationSummary.totalValue, {
+                        withSymbol: false,
+                      })}
                     </span>
                   </div>
                 </div>

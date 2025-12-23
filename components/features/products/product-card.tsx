@@ -13,7 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { Heart, Eye, ShoppingCart } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatLKR } from "@/lib/utils";
 import { Product } from "@/types/product";
 import { addToCart } from "@/lib/store/slices/cart-slice";
 import {
@@ -158,7 +158,7 @@ export function ProductCard({ product }: ProductCardProps) {
           {/* Price */}
           <div className="flex items-center justify-between mt-2 mb-4">
             <p className="text-2xl font-bold text-primary">
-              Rs:{product.selling_price.toFixed(2)}
+              Rs:{formatLKR(product.selling_price, { withSymbol: false })}
             </p>
             <span className="text-sm text-gray-500">
               {product.product_category}
