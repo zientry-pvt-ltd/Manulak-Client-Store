@@ -4,6 +4,7 @@ import { SidebarProvider, Sidebar } from "@/components/ui/sidebar";
 import { AppNavBar } from "@/components/ui/app-nav-bar";
 import { MobileSidebar } from "@/components/ui/app-mobile-sidebar";
 import Image from "next/image";
+import { AppFooter } from "./app-footer";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,7 +12,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen flex w-full">
         <Sidebar />
 
-        <div className="flex-1 flex flex-col  w-full">
+        <div className="flex-1 flex flex-col w-full">
           {/* Fixed Navbar */}
           <MobileSidebar />
 
@@ -20,7 +21,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </header>
 
           {/* Content */}
-          <main className="pt-16">
+          <main className="pt-16 flex-1">
             <div className="w-full bg-[#1A5C15]">
               <Image
                 src={"/assets/banner.png"}
@@ -33,6 +34,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
             {children}
           </main>
+
+          {/* Footer */}
+          <AppFooter />
         </div>
       </div>
     </SidebarProvider>
