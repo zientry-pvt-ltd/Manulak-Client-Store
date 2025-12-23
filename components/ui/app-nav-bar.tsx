@@ -18,15 +18,18 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 export const AppNavBar = () => {
   const dispatch = useAppDispatch();
+  const route = useRouter();
   const searchParams = useAppSelector((state) => state.app.searchQuery);
   const [searchQuery, setSearchQueryLocal] = useState(searchParams || null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleSearch = () => {
     dispatch(setSearchQuery(searchQuery));
+    route.push("/products");
   };
 
   const handleClearSearch = () => {
@@ -37,6 +40,7 @@ export const AppNavBar = () => {
   const handleMobileSearch = () => {
     dispatch(setSearchQuery(searchQuery));
     setIsDialogOpen(false);
+    route.push("/products");
   };
 
   return (
