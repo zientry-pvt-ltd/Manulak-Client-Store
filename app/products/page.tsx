@@ -143,7 +143,7 @@ export default function ProductsPage() {
                 }}
                 className="transition-all duration-200"
               >
-                {category}
+                {category.replace(/_/g, " ")}
                 {selectedCategory === category && (
                   <Badge className="ml-2 bg-white text-primary hover:bg-white">
                     {category === "All"
