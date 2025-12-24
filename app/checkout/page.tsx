@@ -526,7 +526,6 @@ export default function CheckoutPage() {
                       id="email"
                       type="email"
                       placeholder="email@example.com"
-                      onInput={handleNumbersInput}
                       {...form.register("orderMetaData.email")}
                       onBlur={validatePhoneMatch}
                       className={
