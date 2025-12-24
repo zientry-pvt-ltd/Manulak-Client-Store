@@ -161,7 +161,7 @@ export function ProductCard({ product }: ProductCardProps) {
               Rs:{formatLKR(product.selling_price, { withSymbol: false })}
             </p>
             <span className="text-sm text-gray-500">
-              {product.product_category}
+              {product.product_category.replace(/_/g, " ")}
             </span>
           </div>
 
@@ -184,7 +184,7 @@ export function ProductCard({ product }: ProductCardProps) {
             <DialogTitle className="text-2xl">
               {product.product_name}
             </DialogTitle>
-            <DialogDescription>{product.product_category}</DialogDescription>
+            <DialogDescription>{product.product_category.replace(/_/g, " ")}</DialogDescription>
           </DialogHeader>
 
           <div className="overflow-y-auto max-h-[75vh] px-4 pb-6 pt-1 grid grid-cols-1 lg:grid-cols-2 gap-6">

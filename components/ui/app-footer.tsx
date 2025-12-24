@@ -5,7 +5,7 @@ export function AppFooter() {
   return (
     <footer className="bg-gray-900 text-white mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Facebook */}
           <div className="flex flex-col items-center md:items-start">
             <div className="flex items-center gap-3 mb-3">
@@ -36,6 +36,21 @@ export function AppFooter() {
               Subscribe to our channel
             </a>
           </div>
+          {/* Tiktok */}
+          <div className="flex flex-col items-center md:items-start">
+            {/* Placeholder for future TikTok integration */}
+            <div className="flex items-center gap-3 mb-3">
+              <h3 className="text-lg font-semibold">Tiktok</h3>
+            </div>
+            <a
+              href={COMPANY_INFO.TIKTOK_PAGE}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-300 hover:text-pink-400 transition-colors"
+            >
+              Visit our TikTok Page
+            </a>
+          </div>
           {/* Email */}
           <div className="flex flex-col items-center md:items-start">
             <div className="flex items-center gap-3 mb-3">
@@ -43,10 +58,10 @@ export function AppFooter() {
               <h3 className="text-lg font-semibold">Email</h3>
             </div>
             <a
-              href="mailto:info@example.com"
+              href={`mailto:${COMPANY_INFO.EMAIL}`}
               className="text-gray-300 hover:text-green-400 transition-colors"
             >
-              info@example.com
+              {COMPANY_INFO.EMAIL}
             </a>
           </div>
           {/* Location */}
@@ -55,20 +70,22 @@ export function AppFooter() {
               <MapPin className="w-6 h-6 text-yellow-500" />
               <h3 className="text-lg font-semibold">Location</h3>
             </div>
-            <p className="text-gray-300 text-center md:text-left">
-              123 Main Street
-              <br />
-              City, State 12345
-              <br />
-              Country
-            </p>
+            <a
+              href={COMPANY_INFO.LOCATION}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-300 hover:text-yellow-400 transition-colors"
+            >
+              Find us on the map
+            </a>
           </div>
         </div>
 
         {/* Bottom Bar */}
         <div className="mt-8 pt-8 border-t border-gray-800 text-center">
           <p className="text-gray-400 text-sm">
-            © {new Date().getFullYear()} Manulak Agro. All rights reserved.
+            © {new Date().getFullYear()} {COMPANY_INFO.NAME} All rights
+            reserved.
           </p>
         </div>
       </div>
