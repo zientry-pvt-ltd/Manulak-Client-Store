@@ -39,6 +39,7 @@ export type CalculateOrderValueRequest = {
     product_id: string;
     required_quantity: number;
   }>;
+  paymentMethod: PaymentMethod;
 };
 
 export interface OrderMetaData {
@@ -55,9 +56,9 @@ export interface OrderMetaData {
 }
 
 export interface PaymentData {
-  payment_date?: string;
-  paid_amount?: number;
-  payment_slip_number?: string;
+  payment_date?: string | null;
+  paid_amount?: number | null;
+  payment_slip_number?: string | null;
   payment_method?: PaymentMethod;
 }
 
@@ -68,7 +69,7 @@ export interface OrderItem {
 
 export interface FullOrder {
   orderMetaData: OrderMetaData;
-  paymentData?: PaymentData;
+  paymentData?: PaymentData ;
   orderItemsData: OrderItem[];
 }
 
