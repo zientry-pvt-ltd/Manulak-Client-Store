@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import { CreditCard, Truck, AlertCircle, CheckCircle2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
@@ -116,7 +116,11 @@ export default function CheckoutPage() {
         status: "PENDING",
         payment_method: "COD",
       },
-      paymentData: undefined,
+      paymentData: {
+        payment_date: null,
+        paid_amount: null,
+        payment_slip_number: null,
+      },
       orderItemsData: storedCartItems.map((item) => ({
         product_id: item.id,
         required_quantity: item.quantity,
@@ -128,6 +132,9 @@ export default function CheckoutPage() {
   const isCOD = paymentMethod === "COD";
 
   const handlePlaceOrder = async () => {
+    if (isLoading)
+      return toast.warning("Please wait until calculation is complete.");
+
     setSubmitStatus({ type: null, message: "" });
 
     // Check if calculation summary is available
@@ -257,31 +264,45 @@ export default function CheckoutPage() {
     }
   };
 
-  useEffect(() => {
+  const calAsync = useCallback(async () => {
     if (storedCartItems.length === 0) return;
-
     const orderItemsArray = storedCartItems.map((item) => ({
       product_id: item.id,
       required_quantity: item.quantity,
     }));
 
-    calculateOrderValue({ orderItemsArray });
-  }, [calculateOrderValue, storedCartItems]);
+    try {
+      const result = await calculateOrderValue({
+        orderItemsArray,
+        paymentMethod: paymentMethod,
+      });
 
-  // Show toast when calculation fails
+      if (result.error) throw result.error;
+      if (result.data.data.totalValue === 0)
+        throw new Error("Invalid total value");
+
+      form.setValue("orderMetaData.order_value", result.data.data.totalValue);
+    } catch (error) {
+      console.error("Error calculating order value:", error);
+      toast.error("Failed to calculate order value. Please try again.");
+    }
+  }, [storedCartItems, calculateOrderValue, paymentMethod, form]);
+
+  useEffect(() => {
+    calAsync();
+  }, [calAsync]);
+
   useEffect(() => {
     if (error) {
       toast.error("Failed to calculate order value. Please try again.");
     }
   }, [error]);
 
-  // Clear payment fields when COD is selected
   useEffect(() => {
     if (isCOD) {
       form.setValue("paymentData.payment_date", undefined);
       form.setValue("paymentData.paid_amount", undefined);
       form.setValue("paymentData.payment_slip_number", undefined);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocalSlipFile(null);
     }
   }, [isCOD, form]);
@@ -630,7 +651,7 @@ export default function CheckoutPage() {
                       <Label htmlFor="paymentMethod">Payment Method *</Label>
                       <Select
                         value={form.getValues("orderMetaData.payment_method")}
-                        onValueChange={(value) =>
+                        onValueChange={(value) => {
                           form.setValue(
                             "orderMetaData.payment_method",
                             value as PaymentMethod,
@@ -638,8 +659,28 @@ export default function CheckoutPage() {
                               shouldValidate: true,
                               shouldDirty: true,
                             }
-                          )
-                        }
+                          );
+
+                          if (value === "COD") {
+                            form.setValue("paymentData.payment_date", null, {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            });
+                            form.setValue("paymentData.paid_amount", null, {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            });
+                            form.setValue(
+                              "paymentData.payment_slip_number",
+                              null,
+                              {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              }
+                            );
+                            setLocalSlipFile(null);
+                          }
+                        }}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue />
@@ -672,7 +713,10 @@ export default function CheckoutPage() {
                           futureDates: true,
                         }}
                         fullWidth
-                        value={form.getValues("paymentData.payment_date")}
+                        value={
+                          form.getValues("paymentData.payment_date") ??
+                          undefined
+                        }
                         onChange={(value) => {
                           form.setValue(
                             "paymentData.payment_date",
