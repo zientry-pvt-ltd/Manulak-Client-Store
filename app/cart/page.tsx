@@ -11,7 +11,7 @@ import {
   ShoppingBag,
   RotateCcw,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,7 +29,6 @@ import {
   updateQuantity,
 } from "@/lib/store/slices/cart-slice";
 import { useRouter } from "next/navigation";
-import { useCalculateOrderValueMutation } from "@/lib/store/services/orders-api";
 import { useLazyGetProductByIdQuery } from "@/lib/store/services/products-api";
 import dummyThumbnail from "@/public/assets/dummy-thumbnail.jpg";
 import { formatLKR } from "@/lib/utils";
@@ -44,11 +43,6 @@ export default function CartPage() {
 
   const [getProduct, { isLoading: isLoadingProduct }] =
     useLazyGetProductByIdQuery();
-
-  const [calculateOrderValue, { data, error, isLoading }] =
-    useCalculateOrderValueMutation();
-
-  const calculationSummary = data?.data;
 
   const dispatch = useAppDispatch();
   const navigate = useRouter();
@@ -105,17 +99,6 @@ export default function CartPage() {
       navigate.push("/checkout");
     }
   };
-
-  useEffect(() => {
-    if (storedCartItems.length > 0) {
-      const orderItemsArray = storedCartItems.map((item) => ({
-        product_id: item.id,
-        required_quantity: item.quantity,
-      }));
-
-      calculateOrderValue({ orderItemsArray });
-    }
-  }, [storedCartItems, calculateOrderValue]);
 
   if (storedCartItems.length === 0) {
     return (
@@ -266,54 +249,7 @@ export default function CartPage() {
 
         {/* Order Summary Section */}
         <div className="lg:col-span-1">
-          <div className="border rounded-lg p-6 bg-white sticky top-4 min-h-[330px] flex flex-col justify-between">
-            <h2 className="text-2xl font-bold mb-6">Order Summary</h2>
-
-            {error && (
-              <span>Problem calculating order value. Please try again.</span>
-            )}
-
-            {isLoading && <span>Calculating order value...</span>}
-
-            {calculationSummary && (
-              <div className="space-y-3 mb-6">
-                <div className="flex justify-between text-gray-600">
-                  <span>Subtotal</span>
-                  <span className="font-medium">
-                    Rs:
-                    {formatLKR(calculationSummary.itemsValue, {
-                      withSymbol: false,
-                    })}
-                  </span>
-                </div>
-
-                <div className="flex justify-between text-gray-600">
-                  <span>Shipping</span>
-                  <span className="font-medium">
-                    {calculationSummary.courierValue === 0 ? (
-                      <span className="text-green-600">FREE</span>
-                    ) : (
-                      `RS:${formatLKR(calculationSummary.courierValue, {
-                        withSymbol: false,
-                      })}`
-                    )}
-                  </span>
-                </div>
-
-                <div className="border-t pt-3 mt-3">
-                  <div className="flex justify-between text-lg font-bold">
-                    <span>Total</span>
-                    <span className="text-primary">
-                      Rs:
-                      {formatLKR(calculationSummary.totalValue, {
-                        withSymbol: false,
-                      })}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
+          <div className="border rounded-lg p-6 bg-white sticky top-20 min-h-[130px] flex flex-col justify-between">
             <div className="space-y-3">
               <Button
                 className="w-full"
