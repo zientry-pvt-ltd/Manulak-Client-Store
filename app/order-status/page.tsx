@@ -59,8 +59,6 @@ export default function OrderStatusTracker() {
         phoneNumber: phone,
       }).unwrap();
 
-      console.log(result);
-
       setOrderData(result.data);
     } catch (err) {
       setError(
@@ -399,6 +397,11 @@ export default function OrderStatusTracker() {
                     <p className="font-medium">
                       {new Date(orderData.updated_at).toLocaleDateString()}
                     </p>
+                  </div>
+
+                  <div>
+                    <p className="text-gray-600 mb-1">Note</p>
+                    <p className="font-medium">{orderData.admin_message}</p>
                   </div>
                 </div>
               </div>
