@@ -59,8 +59,6 @@ export default function OrderStatusTracker() {
         phoneNumber: phone,
       }).unwrap();
 
-      console.log(result);
-
       setOrderData(result.data);
     } catch (err) {
       setError(
@@ -400,6 +398,11 @@ export default function OrderStatusTracker() {
                       {new Date(orderData.updated_at).toLocaleDateString()}
                     </p>
                   </div>
+
+                  <div>
+                    <p className="text-gray-600 mb-1">Note</p>
+                    <p className="font-medium">{orderData.admin_message}</p>
+                  </div>
                 </div>
               </div>
 
@@ -411,7 +414,9 @@ export default function OrderStatusTracker() {
                   support team.
                 </p>
                 <div className="space-y-2 text-sm">
-                  <p className="text-gray-700">📞 071 86 91 416 | 071 940 33 91</p>
+                  <p className="text-gray-700">
+                    📞 071 86 91 416 | 071 940 33 91
+                  </p>
                   <p className="text-gray-700">✉️ Manulakagro@gmail.com</p>
                 </div>
               </div>

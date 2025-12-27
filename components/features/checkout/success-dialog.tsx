@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 export function SuccessDialog({
@@ -21,15 +22,28 @@ export function SuccessDialog({
   open: boolean;
   onOpenChange: (val: boolean) => void;
 }) {
+  const navigate = useRouter();
+
   const copyToClipboard = () => {
     if (!orderId) return;
     try {
       navigator.clipboard.writeText(orderId);
       toast.success("Order ID copied to clipboard");
+
+      setTimeout(() => {
+        navigate.push("/products");
+      }, 500);
+      onOpenChange(false);
     } catch (error) {
       console.error("Failed to copy order ID to clipboard:", error);
     }
   };
+
+  const handleClose = () => {
+    onOpenChange(false);
+    navigate.push("/products");
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[450px]">
@@ -61,7 +75,9 @@ export function SuccessDialog({
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Close</Button>
+            <Button variant="outline" onClick={handleClose}>
+              Close
+            </Button>
           </DialogClose>
         </DialogFooter>
       </DialogContent>
