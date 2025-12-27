@@ -411,7 +411,9 @@ export default function OrderStatusTracker() {
                   support team.
                 </p>
                 <div className="space-y-2 text-sm">
-                  <p className="text-gray-700">📞 071 86 91 416 | 071 940 33 91</p>
+                  <p className="text-gray-700">
+                    📞 071 86 91 416 | 071 940 33 91
+                  </p>
                   <p className="text-gray-700">✉️ Manulakagro@gmail.com</p>
                 </div>
               </div>
